@@ -833,11 +833,19 @@ function submitForm() {
   completedTabs[3] = true;
 
   if (APPS_SCRIPT_URL) {
-    var img = new Image();
-    img.src = APPS_SCRIPT_URL + '?data=' + encodeURIComponent(JSON.stringify(payload));
-    img.onload = function() { showSuccess(refNum); };
-    img.onerror = function() { showSuccess(refNum); };
-    setTimeout(function() { showSuccess(refNum); }, 2000);
+    // encode ซ้ำ 2 ชั้น: Apps Script ฝั่ง server ทำ decodeURIComponent ซ้ำอีกรอบ
+    // ถ้า encode ชั้นเดียว ค่าที่มี % (เช่น "48.6%") จะทำให้ server พังทั้งแถว (URIError)
+    // ใช้ fetch เพื่ออ่านผลจริงจาก server — แสดง success เฉพาะเมื่อบันทึกสำเร็จเท่านั้น
+    fetch(APPS_SCRIPT_URL + '?data=' + encodeURIComponent(encodeURIComponent(JSON.stringify(payload))))
+      .then(function(res) { return res.json(); })
+      .then(function(j) {
+        if (j.status !== 'ok') throw new Error(j.msg || 'server error');
+        showSuccess(refNum);
+      })
+      .catch(function(err) {
+        btn.textContent = '📨 ส่งคำขอใบเสนอราคา'; btn.disabled = false;
+        alert('ส่งไม่สำเร็จ — ข้อมูลยังไม่ถูกบันทึกลงระบบ!\nกรุณากดส่งใหม่อีกครั้ง\n\nรายละเอียด: ' + err.message);
+      });
   } else {
     showSuccess(refNum);
   }

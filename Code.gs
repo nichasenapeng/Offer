@@ -22,7 +22,11 @@ function doPost(e) {
 function handle(raw) {
   try {
     if (!raw) throw new Error('no data');
-    var payload = JSON.parse(decodeURIComponent(raw));
+    // e.parameter ถูก decode มาแล้ว 1 รอบ — decode เพิ่มเฉพาะเมื่อจำเป็น
+    // (กัน URIError เมื่อข้อมูลมีเครื่องหมาย % เช่น "48.6%")
+    var payload;
+    try { payload = JSON.parse(raw); }
+    catch (e1) { payload = JSON.parse(decodeURIComponent(raw)); }
     writeToSheet(payload);
     return ContentService
       .createTextOutput(JSON.stringify({ status: 'ok', ref: payload.ref }))
