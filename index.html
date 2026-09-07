@@ -791,6 +791,22 @@ body::before, body::after { display: none !important; }
 #approve-app .close-price-wrap label{display:block;font-size:10px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
 #approve-app .close-price-input{width:190px;padding:9px 14px;background:rgba(255,255,255,0.9);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:"Kanit",sans-serif;font-size:15px;font-weight:600;color:var(--ink);transition:border-color .2s,box-shadow .2s}
 #approve-app .close-price-input:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(166,61,95,.15)}
+/* skeleton loader */
+@keyframes skShimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}
+#approve-app .sk,#approve-app .summary-bar.loading .stat-value{
+  background:linear-gradient(90deg,rgba(166,61,95,0.08) 25%,rgba(166,61,95,0.18) 40%,rgba(166,61,95,0.08) 55%);
+  background-size:1200px 100%;animation:skShimmer 1.3s ease-in-out infinite;border-radius:6px;
+}
+#approve-app .sk-card{pointer-events:none;animation:cardIn .3s ease both}
+#approve-app .sk-ref{width:110px;height:11px;margin-bottom:9px}
+#approve-app .sk-title{width:240px;max-width:60%;height:20px;margin-bottom:10px}
+#approve-app .sk-tags{display:flex;gap:6px}
+#approve-app .sk-tag{width:64px;height:20px;border-radius:20px;display:inline-block}
+#approve-app .sk-badge{width:120px;height:24px;border-radius:20px;flex-shrink:0}
+#approve-app .sk-dl{width:80px;height:9px;margin-bottom:8px}
+#approve-app .sk-dv{width:120px;max-width:80%;height:16px}
+#approve-app .sk-row{height:38px;margin:10px 0;border-radius:8px}
+#approve-app .summary-bar.loading .stat-value{color:transparent!important;width:56px;height:28px;margin:2px 0}
 /* ── ROLE SELECT (หน้าแรก: เลือกโหมด) ── */
 .role-overlay{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#FBF7F5 0%,#F4EAED 50%,#EEE0E5 100%)}
 .role-card{background:var(--glass-strong);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--glass-border);border-radius:24px;box-shadow:var(--drop-shadow);padding:48px 44px;text-align:center;width:400px;max-width:92vw}
@@ -1557,9 +1573,78 @@ function parseSheetRows(rows) {
   return out;
 }
 
+
+// ── DEMO DATA (เปิดด้วย ?demo=1 — ข้อมูลสมมุติในเครื่อง ไม่แตะ Google Sheet) ──
+var DEMO_MODE = location.search.indexOf('demo=1') !== -1;
+function demoRows() {
+  var mk = function(ref, day, comp, port, sales, prod, spec, qty, months, idea, mgIdea, period, offer, mgOffer, qtyM, extra) {
+    return {
+      ref: ref, ts: day, company: comp, contact: '', country: '', port: port,
+      incoterm: extra.incoterm || 'CFR', payment: extra.payment || 'LC at Sight',
+      orderType: extra.orderType || 'ออเดอร์ต่อเนื่อง', salesUser: sales, isTest: false,
+      products: [{ type: prod, spec: spec, qty: qty, months: months, ideaPrice: idea, marginIdea: mgIdea }],
+      alloc: extra.alloc || '', lastClosed: extra.lastClosed || '', lastOffer: extra.lastOffer || '',
+      currency: extra.currency || '', other: extra.other || '',
+      period: period, offerPrice: offer, offerMargin: mgOffer,
+      totalQty: extra.totalQty || '', qtyMonth: qtyM, remark: extra.remark || ''
+    };
+  };
+  return [
+    mk('SFD-2026-0101','07/09/2569 09:12','NIPPON FOODS TRADING','Yokohama, Japan','NICHA','BLK 30-40 g','111327401','96 MT / 4 FCL','OCT-DEC 2026','$3,600','45','Oct/Nov 2026','3900','48.6','24 MT / 1 FCL',{alloc:'FL = 150 MT/month, จัดสรร 2-4 FCL/month',lastClosed:'$3,550 (27/08)',currency:'JPY 157.62'}),
+    mk('SFD-2026-0102','07/09/2569 10:03','SEOUL FRESH IMPORT','Busan, South Korea','NET','MID JOINT WING','111327410','48 MT / 2 FCL','NOV 2026','$4,200','38','Nov 2026','4450','41.2','24 MT / 1 FCL',{payment:'TT 30 days',currency:'KRW 1,330'}),
+    mk('SFD-2026-0103','07/09/2569 11:47','OSAKA GOURMET CO.','Osaka, Japan','KAN','HERB FED YTR BOILED BB SKIN 25 G','111327403','1 FCL','OCT 2026','$4,500','25.34','Oct/Nov 2026','4600','25.34','8.91 (40FT)',{alloc:'ใช้ BB skin, ตอนนี้ no order skin',lastClosed:'$4,500 (06/07)',currency:'JPY 162.09 > 158.84'}),
+    mk('SFD-2026-0104','06/09/2569 14:20','TAIPEI PROTEIN LTD.','Kaohsiung, Taiwan','EMMA','BREAST FILLET','111327415','72 MT / 3 FCL','DEC 2026','$5,100','30','Dec 2026/Jan 2027','5300','33.5','24 MT / 1 FCL',{orderType:'ทดลองสั่ง',payment:'LC at Sight'}),
+    mk('SFD-2026-0105','06/09/2569 15:55','KOBE MEAT PARTNERS','Kobe, Japan','NICHA','WING STICK','111327408','48 MT / 2 FCL','NOV-DEC 2026','$2,100','30','Nov 2026','2250','35.5','24 MT / 1 FCL',{lastOffer:'$2,200/MT (15/08)',currency:'JPY 157.20'}),
+    mk('SFD-2026-0106','05/09/2569 09:30','SINGAPORE PRIME FOODS','Singapore','NET','WHOLE LEG','111327420','120 MT / 5 FCL','OCT-NOV 2026','$3,200','28','Oct/Nov 2026','3350','31.8','24 MT / 1 FCL',{payment:'TT 45 days',alloc:'จัดสรร 5 FCL/month'}),
+    mk('SFD-2026-0107','05/09/2569 13:05','NAGOYA SHOKUHIN','Nagoya, Japan','KAN','2JW','111327404','24 MT / 1 FCL','NOV 2026','$3,800','40','Nov 2026','3950','43.1','24 MT / 1 FCL',{currency:'JPY 158.40',remark:'ลูกค้าขอ Herb Fed เท่านั้น'}),
+    mk('SFD-2026-0108','04/09/2569 10:18','HONG KONG DELI IMPORT','Hong Kong','EMMA','BL TRIMMING','111327411','72 MT / 3 FCL','DEC 2026','$2,500','22','Dec 2026','2600','24.8','24 MT / 1 FCL',{orderType:'ออเดอร์ครั้งเดียว',payment:'TT 30 days'}),
+    mk('SFD-2026-0109','04/09/2569 16:42','SHIMIZU FOOD SERVICE','Shimizu, Japan','NICHA','TERIYAKI CHICKEN 60 G','111327430','36 MT / 1.5 FCL','JAN 2027','$5,600','35','Jan/Feb 2027','5800','37.4','18 MT',{alloc:'สายผลิตพร้อม ม.ค.',currency:'JPY 156.80'}),
+    mk('SFD-2026-0110','03/09/2569 11:26','MANILA GLOBAL TRADE','Manila, Philippines','NET','GIZZARD','111327440','48 MT / 2 FCL','NOV 2026','$1,850','18','Nov 2026','1950','21.5','24 MT / 1 FCL',{orderType:'ทดลองสั่ง',payment:'TT 15 days',remark:'ลูกค้าใหม่ ขอตัวอย่างก่อน'})
+  ];
+}
+function demoApprovals() {
+  return {
+    'SFD-2026-0101': {},
+    'SFD-2026-0102': {},
+    'SFD-2026-0103': { A1:'approved', remarkA1:'ราคาโอเค แต่รอเช็คสต็อก skin' },
+    'SFD-2026-0104': { A1:'approved', A2:'approved', remarkA1:'อนุมัติ', remarkA2:'ลูกค้าใหม่ ให้ลองดู' },
+    'SFD-2026-0105': { A1:'approved', A2:'approved' },
+    'SFD-2026-0106': { A1:'approved', A2:'approved', close:'closed-won', closePrice:'3,300' },
+    'SFD-2026-0107': { A1:'approved', A2:'approved', close:'closed-won', closePrice:'3,900' },
+    'SFD-2026-0108': { A1:'approved', A2:'approved', close:'closed-lost' },
+    'SFD-2026-0109': { A1:'rejected', remarkA1:'margin ต่ำกว่าเกณฑ์ ขอปรับราคาใหม่' },
+    'SFD-2026-0110': { A1:'approved' }
+  };
+}
+
+// ── SKELETON LOADER ──
+function skeletonHtml(n) {
+  var cell = '<div class="detail-cell"><div class="sk sk-dl"></div><div class="sk sk-dv"></div></div>';
+  var one = '<div class="offer-card sk-card">' +
+    '<div class="card-header"><div style="flex:1">' +
+      '<div class="sk sk-ref"></div><div class="sk sk-title"></div>' +
+      '<div class="sk-tags"><span class="sk sk-tag"></span><span class="sk sk-tag"></span><span class="sk sk-tag"></span></div>' +
+    '</div><div class="sk sk-badge"></div></div>' +
+    '<div class="offer-detail">' + cell + cell + cell + cell + '</div>' +
+    '<div class="card-products"><div class="sk sk-row"></div><div class="sk sk-row"></div></div>' +
+  '</div>';
+  var out = ''; for (var i = 0; i < n; i++) out += one;
+  return out;
+}
+
 function loadData() {
   var c = document.getElementById('cards');
-  c.innerHTML = '<div class="empty-state"><div class="ei"></div><h3>กำลังโหลดข้อมูล...</h3><p style="margin-top:8px;font-size:13px;color:#888">ดึงข้อมูลจาก Google Sheets</p></div>';
+  c.innerHTML = skeletonHtml(3);
+  var sb = document.querySelector('#approve-app .summary-bar'); if (sb) sb.classList.add('loading');
+  if (DEMO_MODE) {
+    setTimeout(function() {
+      DATA = demoRows(); approvals = demoApprovals(); dataLoaded = true;
+      document.getElementById('last-updated').textContent = 'ข้อมูลสมมุติ (demo)';
+      if (sb) sb.classList.remove('loading');
+      renderCards();
+    }, 1100);
+    return;
+  }
   fetch(API_URL)
     .then(function(r){ return r.json(); })
     .then(function(json){
@@ -1589,9 +1674,11 @@ function loadData() {
       });
 
       document.getElementById('last-updated').textContent = 'อัปเดต: ' + new Date().toLocaleTimeString('th-TH');
+      if (sb) sb.classList.remove('loading');
       renderCards();
     })
     .catch(function(err){
+      if (sb) sb.classList.remove('loading');
       c.innerHTML = '<div class="empty-state"><div class="ei"></div><h3>โหลดข้อมูลไม่สำเร็จ</h3><p style="margin-top:8px;font-size:13px;color:#888">กรุณาลองใหม่</p><button onclick="loadData()" style="margin-top:16px;padding:8px 20px;background:var(--red);color:#fff;border:none;border-radius:8px;cursor:pointer;font-family:Kanit,sans-serif;font-size:14px;">ลองใหม่</button></div>';
       console.error(err);
     });
