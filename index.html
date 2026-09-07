@@ -854,6 +854,8 @@ body::before, body::after { display: none !important; }
 #approve-app .ext-decide{flex:1 0 100%;width:100%;margin-bottom:16px;padding:14px 18px;background:rgba(254,249,231,0.7);border:1px solid #fde68a;border-left:4px solid #d99a2b;border-radius:var(--radius-sm)}
 #approve-app .ext-compare{font-size:14px;color:var(--ink);margin-top:4px}
 #approve-app .ext-compare b{font-family:"Kanit",sans-serif;color:var(--red-dark)}
+#approve-app .filter-btn.has-pending{background:#FEF3C7;border-color:#d99a2b;color:#8a5a08;font-weight:600}
+#approve-app .filter-btn.has-pending.active{background:#d99a2b;border-color:#d99a2b;color:#fff}
 /* ── ROLE SELECT (หน้าแรก: เลือกโหมด) ── */
 .role-overlay{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#FBF7F5 0%,#F4EAED 50%,#EEE0E5 100%)}
 .role-card{background:var(--glass-strong);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--glass-border);border-radius:24px;box-shadow:var(--drop-shadow);padding:48px 44px;text-align:center;width:400px;max-width:92vw}
@@ -2147,7 +2149,12 @@ function reviseOffer(ref, mode) {
       '<div class="revise-hint">ข้อมูลเดิมถูกกรอกไว้ให้แล้ว — แก้เฉพาะจุดที่ต้องปรับ แล้วกดส่งเพื่อออกใบใหม่</div>';
     banner.style.display = 'block';
   }
-  showTab(1);
+  if (mode === 'bidding') {
+    completedTabs[1] = true;   // ข้อมูลลูกค้ากรอกครบแล้ว
+    showTab(2);                // ไปหน้าใส่ราคาใหม่ทันที
+  } else {
+    showTab(1);
+  }
   window.scrollTo(0, 0);
 }
 
@@ -2340,6 +2347,17 @@ function renderCards() {
     document.getElementById('st-rej').textContent  = cnt('rejected');
   }
   document.getElementById('sec-count').textContent = 'แสดง ' + filt.length + ' จาก ' + data.length + ' รายการ';
+
+  // แจ้งเตือนคำขอขยาย VALID ที่ยังไม่ตัดสิน
+  var extBtn = document.getElementById('filter-ext');
+  if (extBtn) {
+    var waiting = data.filter(function(d){
+      var a = approvals[d.ref] || {};
+      return a.extState === 'pending' && getStatus(d.ref) === 'approved';
+    }).length;
+    extBtn.textContent = 'ขอขยาย VALID' + (waiting ? ' (' + waiting + ')' : '');
+    extBtn.classList.toggle('has-pending', waiting > 0);
+  }
 
   var c = document.getElementById('cards');
   if (!curUser && !window._statusMode) { c.innerHTML = '<div class="empty-state"><div class="ei"></div><h3>กรุณาเข้าสู่ระบบ</h3></div>'; return; }
