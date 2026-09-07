@@ -837,6 +837,11 @@ body::before, body::after { display: none !important; }
   #offer-app .g2, #offer-app .g3 { grid-template-columns: 1fr; }
   .site-header { padding: 0 14px; }
 }
+.revise-banner{background:rgba(255,255,255,0.9);border:1px solid var(--red);border-left:4px solid var(--red);border-radius:var(--radius-sm);padding:14px 18px;margin-bottom:16px;font-size:14px;color:var(--ink);box-shadow:0 4px 16px rgba(166,61,95,.12)}
+.revise-reason{margin-top:7px;font-size:13px;color:var(--red-dark);background:rgba(246,235,239,0.8);border-radius:6px;padding:8px 12px;line-height:1.55}
+.revise-hint{margin-top:8px;font-size:12px;color:var(--ink-muted)}
+#approve-app .btn-revise{background:rgba(246,235,239,0.9);color:var(--red-dark);border:1.5px solid var(--red)}
+#approve-app .btn-revise:hover{background:var(--red);color:#fff;transform:translateY(-1px);box-shadow:0 4px 14px rgba(166,61,95,.3)}
 /* ── ROLE SELECT (หน้าแรก: เลือกโหมด) ── */
 .role-overlay{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#FBF7F5 0%,#F4EAED 50%,#EEE0E5 100%)}
 .role-card{background:var(--glass-strong);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--glass-border);border-radius:24px;box-shadow:var(--drop-shadow);padding:48px 44px;text-align:center;width:400px;max-width:92vw}
@@ -938,6 +943,7 @@ body::before, body::after { display: none !important; }
 
 <!-- TAB BAR -->
 <div class="wizard-wrap">
+  <div class="revise-banner" id="revise-banner" style="display:none"></div>
   <div class="tab-bar">
     <div class="tab-item active" id="ti-1">
       <div class="tab-bubble" id="tb-1">1</div>
@@ -1421,6 +1427,9 @@ function showSuccess(refNum) {
 
 function resetForm() {
   document.getElementById('success-overlay').classList.remove('show');
+  window._reviseFrom = null;
+  var rvb = document.getElementById('revise-banner');
+  if (rvb) { rvb.style.display = 'none'; rvb.innerHTML = ''; }
   document.getElementById('c-company').value = '';
   document.getElementById('c-port').value = '';
   if (document.getElementById('t-remark')) document.getElementById('t-remark').value = '';
@@ -1995,6 +2004,63 @@ function postSaleState(ref, statusVal) {
   };
   fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) }).catch(function(){});
 }
+/* ── แก้ไขใบที่ถูกปฏิเสธแล้วส่งใหม่ ── */
+function reviseOffer(ref) {
+  var d = DATA.filter(function(x){ return x.ref === ref; })[0];
+  if (!d) { showToast('ไม่พบข้อมูลใบเสนอราคานี้', 'red'); return; }
+  var av = approvals[ref] || {};
+  var reasons = [];
+  if (av.remarkA1) reasons.push('Approve 1: ' + av.remarkA1);
+  if (av.remarkA2) reasons.push('Approve 2: ' + av.remarkA2);
+
+  enterRole('offer');
+  if (d.salesUser) selectUser(d.salesUser);
+
+  document.getElementById('c-company').value  = d.company   || '';
+  document.getElementById('c-port').value     = d.port      || '';
+  document.getElementById('t-incoterm').value = d.incoterm  || '';
+  document.getElementById('t-payment').value  = d.payment   || '';
+  var ot = document.getElementById('t-order-type');
+  if (ot && d.orderType) {
+    for (var i = 0; i < ot.options.length; i++) {
+      if (ot.options[i].value === d.orderType || ot.options[i].text === d.orderType) { ot.selectedIndex = i; break; }
+    }
+  }
+
+  document.getElementById('products-container').innerHTML = '';
+  prodCount = 0; savedSessions = []; completedTabs = {}; updateSessionBar();
+  var prods = (d.products && d.products.length) ? d.products : [{}];
+  prods.forEach(function(p, idx) {
+    addProduct({
+      type: p.type || '', code: p.spec || '', qty: p.qty || '', months: p.months || '',
+      idea: (p.ideaPrice || '').replace(/^\$/, ''), margin: p.marginIdea || '',
+      // ข้อมูลระดับใบ ใส่เฉพาะรายการแรก กันซ้ำ
+      allocation: idx === 0 ? (d.alloc || '') : '',
+      lastClosed: idx === 0 ? (d.lastClosed || '') : '',
+      lastOffer:  idx === 0 ? (d.lastOffer || '') : '',
+      currency:   idx === 0 ? (d.currency || '') : '',
+      other:      idx === 0 ? (d.other || '') : '',
+      period: d.period || '', offerPrice: d.offerPrice || '',
+      offerMargin: d.offerMargin || '', qtyMonth: d.qtyMonth || ''
+    });
+  });
+
+  var note = 'แก้ไขจาก ' + ref + (reasons.length ? ' — เหตุผลที่ถูกปฏิเสธ: ' + reasons.join(' / ') : '');
+  var rem = document.getElementById('t-remark');
+  if (rem) rem.value = note + (d.remark ? '\n' + d.remark : '');
+  window._reviseFrom = ref;
+
+  var banner = document.getElementById('revise-banner');
+  if (banner) {
+    banner.innerHTML = '<b>กำลังแก้ไขใบที่ถูกปฏิเสธ ' + ref + '</b>' +
+      (reasons.length ? '<div class="revise-reason">' + reasons.join('<br>') + '</div>' : '') +
+      '<div class="revise-hint">ข้อมูลเดิมถูกกรอกไว้ให้แล้ว — แก้เฉพาะจุดที่ต้องปรับ แล้วกดส่งเพื่อออกใบใหม่</div>';
+    banner.style.display = 'block';
+  }
+  showTab(1);
+  window.scrollTo(0, 0);
+}
+
 /* ── dropdown วัน/เดือน/ปี ── */
 var TH_MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 function pad2(n){ return (n < 10 ? '0' : '') + n; }
@@ -2276,6 +2342,7 @@ function renderCards() {
         '<div class="vote-result rejected">ถูกปฏิเสธโดย ' + (who.join(' และ ') || 'ผู้อนุมัติ') + '</div>' +
         (reasons ? '<div class="rej-reasons">' + reasons + '</div>'
                  : '<div class="close-remark-note">ผู้อนุมัติไม่ได้ระบุเหตุผลไว้</div>') +
+        '<button class="vote-btn btn-revise" style="margin-top:12px" onclick="reviseOffer(\'' + d.ref + '\')">แก้ไขและส่งใหม่</button>' +
       '</div></div>';
     }
     else if (window._statusMode && (status === 'approved' || status === 'closed-won' || status === 'closed-lost')) {
