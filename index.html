@@ -789,7 +789,7 @@ body::before, body::after { display: none !important; }
 #approve-app .close-summary{display:flex;align-items:flex-end;gap:26px;flex-wrap:wrap;background:rgba(230,247,240,0.6);border:1px solid #a7f3d0;border-radius:var(--radius-sm);padding:12px 18px}
 #approve-app .close-cell .dl{font-size:10px}
 #approve-app .close-cell .dv{font-size:15px;color:var(--green)}
-#approve-app .sum-filter{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px;padding:14px 18px;background:rgba(255,255,255,0.7);border:1px solid var(--border);border-radius:var(--radius)}
+#approve-app .sum-filter{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;padding:14px 18px;background:rgba(255,255,255,0.7);border:1px solid var(--border);border-radius:var(--radius)}
 #approve-app .sum-filter-label{font-size:12px;font-weight:600;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.06em}
 #approve-app .sum-filter-note{font-size:12px;color:var(--ink-muted)}
 #approve-app .sum-day-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:14px 20px 10px;border-bottom:1px solid var(--border)}
@@ -799,11 +799,13 @@ body::before, body::after { display: none !important; }
 #approve-app .sum-remark td{font-size:12px;color:var(--ink-soft);padding-top:0;border-bottom:1px solid #f5f5f5}
 #approve-app .sum-grand{display:flex;gap:26px;flex-wrap:wrap;justify-content:flex-end;align-items:baseline;margin-top:4px;padding:16px 22px;background:rgba(255,255,255,0.75);border:1px solid var(--border-strong);border-radius:var(--radius);font-size:14px;color:var(--ink-soft)}
 #approve-app .sum-grand b{font-family:"Kanit",sans-serif;font-size:19px;color:var(--red-dark)}
-.date-selects{display:flex;gap:8px;flex-wrap:wrap}
-.date-selects .date-sel{flex:0 0 auto;width:88px}
-.date-selects .date-sel-m{width:104px}
-.date-sel{padding:9px 10px;background:rgba(255,255,255,0.9);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:"Kanit",sans-serif;font-size:14px;font-weight:500;color:var(--ink);cursor:pointer;transition:border-color .2s,box-shadow .2s}
-.date-sel:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(166,61,95,.15)}
+.date-pick{flex:0 0 auto;width:172px;max-width:100%;padding:9px 12px;background:rgba(255,255,255,0.92);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:"Kanit",sans-serif;font-size:14px;font-weight:500;color:var(--ink);cursor:pointer;transition:border-color .2s,box-shadow .2s}
+.date-pick:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(166,61,95,.15)}
+#approve-app .sum-dash{font-size:13px;color:var(--ink-muted)}
+#approve-app .sum-quick{display:flex;gap:7px;flex-wrap:wrap;margin-left:4px}
+#approve-app .quick-btn{padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);background:rgba(255,255,255,0.9);font-family:"Kanit",sans-serif;font-size:12px;color:var(--ink-soft);cursor:pointer;transition:all .18s}
+#approve-app .quick-btn:hover{border-color:var(--red);color:var(--red)}
+#approve-app .quick-btn.clear{border-color:var(--red);color:var(--red);font-weight:500}
 
 #approve-app .close-date-wrap{margin-bottom:14px}
 #approve-app .rej-reasons{margin-top:10px;display:flex;flex-direction:column;gap:8px}
@@ -2180,31 +2182,18 @@ function todayISO() {
   var d = new Date();
   return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate());
 }
-function dateSelects(idPrefix, iso, allowAll, onchange) {
-  var parts = (iso || '').split('-');
-  var y = parts[0] || '', m = parts[1] || '', dd = parts[2] || '';
-  var ch = onchange ? ' onchange="' + onchange + '"' : '';
-  var opt = function(val, label, sel){ return '<option value="' + val + '"' + (String(sel) === String(val) ? ' selected' : '') + '>' + label + '</option>'; };
-
-  var days = allowAll ? opt('', 'ทุกวัน', dd) : '';
-  for (var i = 1; i <= 31; i++) days += opt(pad2(i), i, dd);
-
-  var months = allowAll ? opt('', 'ทุกเดือน', m) : '';
-  for (var j = 1; j <= 12; j++) months += opt(pad2(j), TH_MONTHS[j-1], m);
-
-  var nowY = new Date().getFullYear();
-  var years = allowAll ? opt('', 'ทุกปี', y) : '';
-  for (var k = nowY - 2; k <= nowY + 1; k++) years += opt(k, k + 543, y);
-
-  return '<div class="date-selects">' +
-    '<select id="' + idPrefix + '-d" class="date-sel"' + ch + '>' + days + '</select>' +
-    '<select id="' + idPrefix + '-m" class="date-sel date-sel-m"' + ch + '>' + months + '</select>' +
-    '<select id="' + idPrefix + '-y" class="date-sel"' + ch + '>' + years + '</select>' +
-  '</div>';
+function dateInput(id, iso, onchange) {
+  return '<input type="date" id="' + id + '" class="date-pick" value="' + (iso || '') + '"' +
+    (onchange ? ' onchange="' + onchange + '"' : '') + '>';
 }
-function readDateSelects(idPrefix) {
-  var g = function(sfx){ var el = document.getElementById(idPrefix + sfx); return el ? el.value : ''; };
-  return { d: g('-d'), m: g('-m'), y: g('-y') };
+function shiftISO(days) {
+  var d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate());
+}
+function monthStartISO() {
+  var d = new Date();
+  return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-01';
 }
 
 /* ── สรุปยอด: แปลงข้อความ qty/ราคา เป็นตัวเลข ── */
@@ -2252,8 +2241,8 @@ function closeSale(ref, result) {
     CLOSE_FIELDS.forEach(function(f){ delete approvals[ref][f.key]; });
     vals = ['', '', '', '', remark];
   }
-  var sel = readDateSelects('close-date-' + ref);
-  var closeDate = (sel.y && sel.m && sel.d) ? (sel.y + '-' + sel.m + '-' + sel.d) : (approvals[ref].closeDate || todayISO());
+  var dEl = document.getElementById('close-date-' + ref);
+  var closeDate = (dEl && dEl.value) ? dEl.value : (approvals[ref].closeDate || todayISO());
   vals.push(closeDate);
   approvals[ref].close = result;
   approvals[ref].closeRemark = remark;
@@ -2486,7 +2475,7 @@ function renderCards() {
             (d[f.from] ? 'เสนอไว้ ' + d[f.from] : '—') + '" value="' + (av[f.key] || '') + '"></div>';
         }).join('');
         closeInner = '<div class="close-field close-date-wrap"><label>วันที่ปิดการขาย</label>' +
-          dateSelects('close-date-' + d.ref, av.closeDate || todayISO(), false) + '</div>' +
+          dateInput('close-date-' + d.ref, av.closeDate || todayISO()) + '</div>' +
           '<div class="close-grid">' + inputs + '</div>' +
           '<div class="close-field close-remark-wrap"><label>Remark (ถ้ามี)</label>' +
           '<textarea id="close-remark-' + d.ref + '" class="close-input close-remark" rows="2" placeholder="เช่น ลูกค้าขอเลื่อน shipment, ต่อรองราคาลง, คู่แข่งเสนอต่ำกว่า">' + (av.closeRemark || '') + '</textarea></div>' +
@@ -2574,13 +2563,18 @@ function renderCards() {
 }
 
 /* ── หน้าสรุปการปิดการขายรายวัน ── */
-var SUM_FILTER = { d: '', m: '', y: '' };
+var SUM_FILTER = { from: '', to: '' };
 function applySummaryFilter() {
-  SUM_FILTER = readDateSelects('sum-date');
+  var f = document.getElementById('sum-from'), t = document.getElementById('sum-to');
+  SUM_FILTER = { from: f ? f.value : '', to: t ? t.value : '' };
+  renderSummary_();
+}
+function setSummaryRange(from, to) {
+  SUM_FILTER = { from: from, to: to };
   renderSummary_();
 }
 function clearSummaryFilter() {
-  SUM_FILTER = { d: '', m: '', y: '' };
+  SUM_FILTER = { from: '', to: '' };
   renderSummary_();
 }
 
@@ -2590,13 +2584,11 @@ function renderSummary_() {
   var f = SUM_FILTER;
   var won = allWon.filter(function(d) {
     var iso = (approvals[d.ref] || {}).closeDate || '';
-    var p = iso.split('-');
-    if (f.y && p[0] !== f.y) return false;
-    if (f.m && p[1] !== f.m) return false;
-    if (f.d && p[2] !== f.d) return false;
+    if (f.from && (!iso || iso < f.from)) return false;
+    if (f.to   && (!iso || iso > f.to))   return false;
     return true;
   });
-  var filtered = !!(f.d || f.m || f.y);
+  var filtered = !!(f.from || f.to);
 
   var byDay = {};
   won.forEach(function(d) {
@@ -2620,17 +2612,26 @@ function renderSummary_() {
   document.getElementById('st-rej').textContent   = fmt(grandVal);
   document.getElementById('sec-count').textContent = 'ปิดการขายได้ ' + won.length + ' รายการ';
 
-  var filterBar = '<div class="sum-filter"><span class="sum-filter-label">เลือกวันที่:</span>' +
-    dateSelects('sum-date', (f.y || '') + '-' + (f.m || '') + '-' + (f.d || ''), true, 'applySummaryFilter()') +
-    (filtered ? '<button class="btn-undo" onclick="clearSummaryFilter()">ล้างตัวกรอง</button>' +
-      '<span class="sum-filter-note">แสดง ' + won.length + ' จาก ' + allWon.length + ' รายการ</span>' : '') +
+  var today = todayISO();
+  var filterBar = '<div class="sum-filter">' +
+    '<span class="sum-filter-label">ช่วงวันที่:</span>' +
+    dateInput('sum-from', f.from, 'applySummaryFilter()') +
+    '<span class="sum-dash">ถึง</span>' +
+    dateInput('sum-to', f.to, 'applySummaryFilter()') +
+    '<span class="sum-quick">' +
+      '<button class="quick-btn" onclick="setSummaryRange(\'' + today + '\',\'' + today + '\')">วันนี้</button>' +
+      '<button class="quick-btn" onclick="setSummaryRange(\'' + shiftISO(-6) + '\',\'' + today + '\')">7 วันล่าสุด</button>' +
+      '<button class="quick-btn" onclick="setSummaryRange(\'' + monthStartISO() + '\',\'' + today + '\')">เดือนนี้</button>' +
+      (filtered ? '<button class="quick-btn clear" onclick="clearSummaryFilter()">ทั้งหมด</button>' : '') +
+    '</span>' +
+    (filtered ? '<span class="sum-filter-note">แสดง ' + won.length + ' จาก ' + allWon.length + ' รายการ</span>' : '') +
   '</div>';
 
   if (!won.length) {
     c.innerHTML = filterBar + '<div class="empty-state"><h3>' +
       (filtered ? 'ไม่มีการปิดการขายในวันที่เลือก' : 'ยังไม่มีรายการที่ปิดการขาย') + '</h3>' +
       '<p style="margin-top:8px;font-size:13px;color:var(--ink-muted)">' +
-      (filtered ? 'ลองเลือกวันอื่น หรือกดล้างตัวกรองเพื่อดูทั้งหมด' : 'เมื่อทีมขายบันทึกผล "ปิดการขายได้" ในหน้าเช็คสถานะ รายการจะมาแสดงที่นี่') +
+      (filtered ? 'ลองเลือกช่วงวันอื่น หรือกด "ทั้งหมด" เพื่อดูทุกรายการ' : 'เมื่อทีมขายบันทึกผล "ปิดการขายได้" ในหน้าเช็คสถานะ รายการจะมาแสดงที่นี่') +
       '</p></div>';
     return;
   }
