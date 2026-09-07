@@ -916,6 +916,9 @@ body::before, body::after { display: none !important; }
 .link-open:hover{background:var(--orange);color:#fff;border-color:var(--orange)}
 .link-copy{font-family:"Kanit",sans-serif;font-size:12px;color:var(--ink-soft);background:rgba(255,255,255,0.9);border:1.5px solid var(--border);border-radius:16px;padding:5px 12px;cursor:pointer;transition:all .18s}
 .link-copy:hover{border-color:var(--orange);color:var(--orange)}
+.port-frt{margin-top:7px;padding:8px 13px;background:rgba(230,247,240,0.7);border:1px solid #a7f3d0;border-radius:var(--radius-sm);font-size:13px;color:var(--green)}
+.port-frt b{font-family:"Kanit",sans-serif;font-size:15px}
+.port-frt-m{font-size:11px;color:var(--ink-muted)}
 /* ── ROLE SELECT (หน้าแรก: เลือกโหมด) ── */
 .role-overlay{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(135deg,#FBF7F5 0%,#F4EAED 50%,#EEE0E5 100%);overflow:auto}
 .role-card{background:var(--glass-strong);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--glass-border);border-radius:24px;box-shadow:var(--drop-shadow);padding:44px 40px 34px;text-align:center;width:640px;max-width:100%}
@@ -1069,7 +1072,10 @@ body::before, body::after { display: none !important; }
       </div>
       <div class="field" style="margin-bottom:14px">
         <label>ท่าเรือปลายทาง / Destination Port <span class="req">*</span></label>
-        <input id="c-port" type="text" placeholder="เช่น Busan, South Korea / Shimizu, Japan">
+        <input id="c-port" type="text" list="port-list" autocomplete="off"
+          placeholder="เลือกจากรายการ หรือพิมพ์เอง เช่น Busan, South Korea" oninput="onPortChange()">
+        <datalist id="port-list"></datalist>
+        <div class="port-frt" id="port-frt" style="display:none"></div>
       </div>
       <div class="g3">
         <div class="field">
@@ -1343,19 +1349,46 @@ function showTab(n) {
   window.scrollTo(0, 0);
 }
 
-/* เติมค่าเฟรทจากตาราง ให้รายการที่ยังไม่ได้กรอก */
+/* รายการท่าเรือใน dropdown — ดึงจากตารางค่าเฟรทในหน้าตั้งค่า */
+function fillPortList() {
+  var dl = document.getElementById('port-list');
+  if (!dl) return;
+  var tbl = getFreightTable();
+  dl.innerHTML = tbl.ports.map(function(p) {
+    return '<option value="' + p.n + '"' + (p.usd ? ' label="' + Number(p.usd).toLocaleString('en-US') + ' USD/ตู้"' : '') + '>';
+  }).join('');
+}
+
+/* เติมค่าเฟรทจากตาราง — เติมช่องที่ว่าง หรือช่องที่เคยเติมอัตโนมัติไว้ */
 function applyFreightFromPort() {
   var portEl = document.getElementById('c-port');
   var hit = lookupFreight(portEl ? portEl.value : '');
   document.querySelectorAll('#offer-app .prod-block').forEach(function(b) {
     var f = b.querySelector('.pp-freight');
     var tag = b.querySelector('.frt-src');
-    if (f && hit && !f.value) { f.value = hit.usd; calcFreight(f); }
+    if (f && hit && (!f.value || f.dataset.auto === '1')) {
+      f.value = hit.usd; f.dataset.auto = '1';
+      window._autoFillEl = f; calcFreight(f); window._autoFillEl = null;
+    }
     if (tag) {
       tag.textContent = hit ? 'จากตารางค่าเฟรท ' + hit.month + ' · ' + hit.port + (hit.note ? ' (' + hit.note + ')' : '') : '';
       tag.style.display = hit ? 'block' : 'none';
     }
   });
+}
+
+/* พิมพ์/เลือกท่าเรือแล้วอัปเดตทันที ไม่ต้องรอกดถัดไป */
+function onPortChange() {
+  var hit = lookupFreight(document.getElementById('c-port').value);
+  var box = document.getElementById('port-frt');
+  if (box) {
+    box.innerHTML = hit
+      ? 'ค่าเฟรท <b>' + Number(hit.usd).toLocaleString('en-US') + '</b> USD/ตู้ · ' + hit.port +
+        ' <span class="port-frt-m">(ตาราง ' + hit.month + ')</span>' + (hit.note ? ' <span class="port-frt-m">' + hit.note + '</span>' : '')
+      : '';
+    box.style.display = hit ? 'block' : 'none';
+  }
+  applyFreightFromPort();
 }
 
 function goNext(from) {
@@ -1499,6 +1532,10 @@ function num_(v) {
 function calcFreight(el) {
   var b = el.closest ? el.closest('.prod-block') : null;
   if (!b) return;
+  // พิมพ์ค่าเฟรทเองแล้ว ระบบจะไม่เติมทับอีก
+  if (el.classList && el.classList.contains('pp-freight') && el.dataset.auto === '1' && el !== window._autoFillEl) {
+    delete el.dataset.auto;
+  }
   var box = b.querySelector('.frt-calc');
   var frt = num_((b.querySelector('.pp-freight')||{}).value);
   var mt  = num_((b.querySelector('.pp-mtcont')||{}).value);
@@ -1758,6 +1795,7 @@ function renderSummary() {
 
 /* ── INIT & EVENT BINDING ── */
 addProduct();
+fillPortList();
 
 document.addEventListener('click', function(e) {
   var t = e.target;
@@ -3054,6 +3092,7 @@ function saveFreightTable() {
     tbl.ports[+el.dataset.i].usd = (el.value || '').trim();
   });
   try { localStorage.setItem('sf_freight', JSON.stringify(tbl)); } catch (e) {}
+  fillPortList();
   var el = document.getElementById('frt-saved');
   el.textContent = 'บันทึกแล้ว';
   setTimeout(function(){ el.textContent = ''; }, 2500);
