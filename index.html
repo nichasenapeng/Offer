@@ -872,8 +872,12 @@ body::before, body::after { display: none !important; }
 #approve-app .notif-pill b{font-size:14px;font-weight:700}
 #approve-app .notif-dot{width:7px;height:7px;border-radius:50%;background:#d99a2b;box-shadow:0 0 0 3px rgba(217,154,43,.25);animation:notifPulse 1.8s ease-in-out infinite}
 @keyframes notifPulse{0%,100%{opacity:1}50%{opacity:.35}}
-.frt-calc{display:flex;flex-wrap:wrap;gap:18px;margin-bottom:10px;padding:11px 16px;background:rgba(246,235,239,0.75);border:1px solid var(--border-strong);border-radius:var(--radius-sm);font-size:13px;color:var(--ink-soft)}
-.frt-calc b{font-family:"Kanit",sans-serif;font-size:15px;color:var(--orange)}
+.frt-calc{margin-bottom:10px;padding:12px 16px;background:rgba(246,235,239,0.75);border:1px solid var(--border-strong);border-radius:var(--radius-sm);font-size:13px;color:var(--ink-soft)}
+.frt-row{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;padding:3px 0}
+.frt-eq{min-width:170px;font-family:"Sarabun",sans-serif;font-size:12px;color:var(--ink-muted)}
+.frt-res b{font-family:"Kanit",sans-serif;font-size:15px;color:var(--orange)}
+.frt-res.big b{font-size:19px;color:var(--red-dark)}
+.frt-hint{margin-top:5px;font-size:12px;color:var(--ink-muted);font-style:italic}
 #approve-app .dv-unit{font-size:11px;font-weight:400;color:var(--ink-muted)}
 #approve-app .dv-sub{font-family:"Sarabun",sans-serif;font-size:11px;font-weight:400;color:var(--ink-muted);margin-top:2px}
 /* ── ROLE SELECT (หน้าแรก: เลือกโหมด) ── */
@@ -1333,15 +1337,26 @@ function calcFreight(el) {
   var fx  = num_((b.querySelector('.pp-fx')||{}).value);
   if (!frt || !mt) { box.style.display = 'none'; return; }
 
+  var fmt = function(n){ return n.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); };
   var perMT = frt / mt;
-  var parts = ['<span>ค่าเฟรท <b>' + perMT.toFixed(2) + '</b> USD/MT</span>'];
-  if (off) {
+  var rows = ['<div class="frt-row"><span class="frt-eq">' + frt.toLocaleString('en-US') + ' ÷ ' + mt + ' MT</span>' +
+              '<span class="frt-res">ค่าเฟรท <b>' + fmt(perMT) + '</b> USD/MT</span></div>'];
+
+  if (!off) {
+    rows.push('<div class="frt-hint">กรอก "ราคาเสนอ (USD/MT)" ด้านบน เพื่อดูราคาสุทธิหลังหักเฟรท และราคาเป็น THB/kg</div>');
+  } else {
     var net = off - perMT;
-    parts.push('<span>ราคาสุทธิหลังหักเฟรท <b>' + net.toFixed(2) + '</b> USD/MT</span>');
-    if (fx) parts.push('<span>เทียบเป็น <b>' + (net * fx / 1000).toFixed(2) + '</b> THB/kg</span>');
+    rows.push('<div class="frt-row"><span class="frt-eq">' + fmt(off) + ' − ' + fmt(perMT) + '</span>' +
+              '<span class="frt-res">ราคาสุทธิ <b>' + fmt(net) + '</b> USD/MT</span></div>');
+    if (fx) {
+      rows.push('<div class="frt-row"><span class="frt-eq">' + fmt(net) + ' × ' + fx + ' ÷ 1,000</span>' +
+                '<span class="frt-res big">คิดเป็น <b>' + fmt(net * fx / 1000) + '</b> THB/kg</span></div>');
+    } else {
+      rows.push('<div class="frt-hint">กรอก "ค่าเงิน (THB ต่อ USD)" เพื่อดูราคาเป็น THB/kg</div>');
+    }
   }
-  box.innerHTML = parts.join('');
-  box.style.display = 'flex';
+  box.innerHTML = rows.join('');
+  box.style.display = 'block';
 }
 
 function getProdData() {
