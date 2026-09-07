@@ -872,6 +872,10 @@ body::before, body::after { display: none !important; }
 #approve-app .notif-pill b{font-size:14px;font-weight:700}
 #approve-app .notif-dot{width:7px;height:7px;border-radius:50%;background:#d99a2b;box-shadow:0 0 0 3px rgba(217,154,43,.25);animation:notifPulse 1.8s ease-in-out infinite}
 @keyframes notifPulse{0%,100%{opacity:1}50%{opacity:.35}}
+.frt-calc{display:flex;flex-wrap:wrap;gap:18px;margin-bottom:10px;padding:11px 16px;background:rgba(246,235,239,0.75);border:1px solid var(--border-strong);border-radius:var(--radius-sm);font-size:13px;color:var(--ink-soft)}
+.frt-calc b{font-family:"Kanit",sans-serif;font-size:15px;color:var(--orange)}
+#approve-app .dv-unit{font-size:11px;font-weight:400;color:var(--ink-muted)}
+#approve-app .dv-sub{font-family:"Sarabun",sans-serif;font-size:11px;font-weight:400;color:var(--ink-muted);margin-top:2px}
 /* ── ROLE SELECT (หน้าแรก: เลือกโหมด) ── */
 .role-overlay{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#FBF7F5 0%,#F4EAED 50%,#EEE0E5 100%)}
 .role-card{background:var(--glass-strong);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--glass-border);border-radius:24px;box-shadow:var(--drop-shadow);padding:48px 44px;text-align:center;width:400px;max-width:92vw}
@@ -1265,7 +1269,7 @@ function addProduct(data) {
       '<div class="field"><label>Shipment ที่จะเสนอ <span class="req">*</span></label>' +
         '<input class="pp-period" type="text" placeholder="เช่น Oct/Nov 2026" value="' + (data.period||'') + '"></div>' +
       '<div class="field"><label>ราคาเสนอ (USD/MT)</label>' +
-        '<input class="pp-offer-price" type="text" placeholder="เช่น $3,625" value="' + (data.offerPrice||'') + '"></div>' +
+        '<input class="pp-offer-price" type="text" placeholder="เช่น $3,625" value="' + (data.offerPrice||'') + '" oninput="calcFreight(this)"></div>' +
       '<div class="field"><label>%Margin (Offer)</label>' +
         '<input class="pp-offer-margin" type="text" placeholder="เช่น 48.6%" value="' + (data.offerMargin||'') + '"></div>' +
     '</div>' +
@@ -1277,6 +1281,16 @@ function addProduct(data) {
       '<div class="field"><label>VALID (ยืนราคาถึง)</label>' +
         '<input class="pp-valid" type="text" placeholder="เช่น 7 วัน / ถึง 30/09/2026" value="' + (data.valid||'') + '"></div>' +
     '</div>' +
+
+    '<div class="g3" style="margin-bottom:10px">' +
+      '<div class="field"><label>ค่าเฟรท (USD ต่อตู้)</label>' +
+        '<input class="pp-freight" type="text" inputmode="decimal" placeholder="เช่น 3000" value="' + (data.freight||'') + '" oninput="calcFreight(this)"></div>' +
+      '<div class="field"><label>ปริมาณต่อตู้ (MT)</label>' +
+        '<input class="pp-mtcont" type="text" inputmode="decimal" placeholder="เช่น 24" value="' + (data.mtPerCont||'') + '" oninput="calcFreight(this)"></div>' +
+      '<div class="field"><label>ค่าเงิน (THB ต่อ USD)</label>' +
+        '<input class="pp-fx" type="text" inputmode="decimal" placeholder="เช่น 32.33" value="' + (data.fx||'') + '" oninput="calcFreight(this)"></div>' +
+    '</div>' +
+    '<div class="frt-calc" style="display:none"></div>' +
 
     /* ── Detail ── */
     '<div class="prod-offer-divider"></div>' +
@@ -1304,6 +1318,32 @@ function removeProduct(id) {
   if (el) el.remove();
 }
 
+/* ── คำนวณค่าเฟรท → ราคาสุทธิ → THB/kg ── */
+function num_(v) {
+  var n = parseFloat(String(v || '').replace(/[^\d.\-]/g, ''));
+  return isNaN(n) ? 0 : n;
+}
+function calcFreight(el) {
+  var b = el.closest ? el.closest('.prod-block') : null;
+  if (!b) return;
+  var box = b.querySelector('.frt-calc');
+  var frt = num_((b.querySelector('.pp-freight')||{}).value);
+  var mt  = num_((b.querySelector('.pp-mtcont')||{}).value);
+  var off = num_((b.querySelector('.pp-offer-price')||{}).value);
+  var fx  = num_((b.querySelector('.pp-fx')||{}).value);
+  if (!frt || !mt) { box.style.display = 'none'; return; }
+
+  var perMT = frt / mt;
+  var parts = ['<span>ค่าเฟรท <b>' + perMT.toFixed(2) + '</b> USD/MT</span>'];
+  if (off) {
+    var net = off - perMT;
+    parts.push('<span>ราคาสุทธิหลังหักเฟรท <b>' + net.toFixed(2) + '</b> USD/MT</span>');
+    if (fx) parts.push('<span>เทียบเป็น <b>' + (net * fx / 1000).toFixed(2) + '</b> THB/kg</span>');
+  }
+  box.innerHTML = parts.join('');
+  box.style.display = 'flex';
+}
+
 function getProdData() {
   var out = [];
   document.querySelectorAll('.prod-block').forEach(function(b) {
@@ -1324,7 +1364,10 @@ function getProdData() {
       offerMargin:(b.querySelector('.pp-offer-margin')||{}).value||'',
       qtyMonth:   (b.querySelector('.pp-qty-month')   ||{}).value||'',
       offerDate:  (b.querySelector('.pp-offer-date')  ||{}).value||'',
-      valid:      (b.querySelector('.pp-valid')       ||{}).value||''
+      valid:      (b.querySelector('.pp-valid')       ||{}).value||'',
+      freight:    (b.querySelector('.pp-freight')     ||{}).value||'',
+      mtPerCont:  (b.querySelector('.pp-mtcont')      ||{}).value||'',
+      fx:         (b.querySelector('.pp-fx')          ||{}).value||''
     });
   });
   return out;
@@ -1391,6 +1434,14 @@ function updateSessionBar() {
 }
 
 /* ── SUBMIT ── */
+/* ── ข้อมูลเสริมที่ยังไม่มีคอลัมน์ในชีท ฝากไว้ต้นหมายเหตุ ── */
+var META_KEYS = [['DATE','offerDate'], ['VALID','valid'], ['FRT','freight'], ['MTC','mtPerCont'], ['FX','fx']];
+function buildMeta_(p) {
+  var parts = META_KEYS.filter(function(k){ return p[k[1]]; })
+                       .map(function(k){ return k[0] + ': ' + String(p[k[1]]).replace(/[|\]]/g, ' '); });
+  return parts.length ? '[' + parts.join(' | ') + '] ' : '';
+}
+
 function submitForm() {
   var g = function(id) { return document.getElementById(id) ? document.getElementById(id).value.trim() : ''; };
 
@@ -1429,10 +1480,9 @@ function submitForm() {
           period: p.period||'', offerPrice: p.offerPrice||'',
           offerMargin: p.offerMargin||'', qtyMonth: p.qtyMonth||'',
           offerDate: p.offerDate||'', valid: p.valid||'',
-          // ฝัง DATE/VALID ไว้ต้นคอลัมน์หมายเหตุ ให้ขึ้นชีทได้เลยโดยไม่ต้องเพิ่มคอลัมน์
-          remark: ((p.offerDate || p.valid)
-            ? '[DATE: ' + (p.offerDate || '-') + ' | VALID: ' + (p.valid || '-') + '] '
-            : '') + (s.remark||'')
+          freight: p.freight||'', mtPerCont: p.mtPerCont||'', fx: p.fx||'',
+          // ฝังข้อมูลเสริมไว้ต้นคอลัมน์หมายเหตุ ให้ขึ้นชีทได้เลยโดยไม่ต้องเพิ่มคอลัมน์
+          remark: buildMeta_(p) + (s.remark||'')
         };
       }));
     }, [])
@@ -1569,12 +1619,21 @@ var dataLoaded = false;
 
 function g(row, key) { return (row[key] || '').toString().trim(); }
 
-/* แกะ [DATE: .. | VALID: ..] ที่ฝังไว้ต้นหมายเหตุ ออกมาเป็นช่องแยก */
+/* แกะข้อมูลเสริมที่ฝังไว้ต้นหมายเหตุ ออกมาเป็นช่องแยก */
 function stripMeta_(txt) {
-  var m = (txt || '').match(/^\s*\[DATE:\s*([^|\]]*)\|\s*VALID:\s*([^\]]*)\]\s*/);
-  if (!m) return { text: txt || '', date: '', valid: '' };
-  var clean = function(v){ v = (v || '').trim(); return v === '-' ? '' : v; };
-  return { text: txt.slice(m[0].length), date: clean(m[1]), valid: clean(m[2]) };
+  var out = { text: txt || '', date: '', valid: '', freight: '', mtPerCont: '', fx: '' };
+  var m = (txt || '').match(/^\s*\[([^\]]*)\]\s*/);
+  if (!m) return out;
+  var keyOf = { DATE:'date', VALID:'valid', FRT:'freight', MTC:'mtPerCont', FX:'fx' };
+  m[1].split('|').forEach(function(seg) {
+    var kv = seg.split(':');
+    if (kv.length < 2) return;
+    var k = keyOf[kv[0].trim().toUpperCase()];
+    var v = kv.slice(1).join(':').trim();
+    if (k && v && v !== '-') out[k] = v;
+  });
+  out.text = txt.slice(m[0].length);
+  return out;
 }
 
 function parseSheetRows(rows) {
@@ -1648,6 +1707,7 @@ function parseSheetRows(rows) {
       }];
     }
 
+    var meta_ = stripMeta_(g(row, 'หมายเหตุ'));
     out.push({
       ref:       ref,
       ts:        tsClean,
@@ -1671,9 +1731,12 @@ function parseSheetRows(rows) {
       offerMargin:g(row, '%Margin (Offer)'),
       totalQty:   g(row, 'Total Quantity (MT)'),
       qtyMonth:   g(row, 'Quantity per Month (MT)'),
-      remark:     stripMeta_(g(row, 'หมายเหตุ')).text,
-      offerDate:  stripMeta_(g(row, 'หมายเหตุ')).date,
-      valid:      stripMeta_(g(row, 'หมายเหตุ')).valid,
+      remark:     meta_.text,
+      offerDate:  meta_.date,
+      valid:      meta_.valid,
+      freight:    meta_.freight,
+      mtPerCont:  meta_.mtPerCont,
+      fx:         meta_.fx,
       _sheetOverall:  g(row, 'สถานะรวม'),
       _sheetA1:       sheetA1,
       _sheetA2:       sheetA2,
@@ -2041,6 +2104,24 @@ function getStatus(ref) {
   return 'pending';
 }
 
+/* ช่องค่าเฟรท / ราคาสุทธิ / THB per kg บนการ์ด */
+function freightCells_(d) {
+  var frt = numOf(d.freight), mt = numOf(d.mtPerCont);
+  if (!frt || !mt) return '';
+  var perMT = frt / mt, out = '';
+  out += '<div class="detail-cell"><div class="dl">ค่าเฟรท</div><div class="dv">' + perMT.toFixed(2) +
+         '<span class="dv-unit"> USD/MT</span><div class="dv-sub">' + frt.toLocaleString('en-US') + ' / ' + mt + ' MT</div></div></div>';
+  var off = numOf(d.offerPrice);
+  if (off) {
+    var net = off - perMT, fx = numOf(d.fx);
+    out += '<div class="detail-cell"><div class="dl">ราคาสุทธิ (หักเฟรท)</div><div class="dv dv-red">' + net.toFixed(2) +
+           '<span class="dv-unit"> USD/MT</span>' +
+           (fx ? '<div class="dv-sub">' + (net * fx / 1000).toFixed(2) + ' THB/kg @ ' + fx + '</div>' : '') +
+           '</div></div>';
+  }
+  return out;
+}
+
 function badge(status) {
   var m = { pending:['badge-pending','รออนุมัติ'], approved:['badge-approved','อนุมัติครบ — รอปิดการขาย'], rejected:['badge-rejected','ปฏิเสธ'], partial:['badge-partial','Approve 1 แล้ว'], 'closed-won':['badge-approved','ปิดการขายได้'], 'closed-lost':['badge-lost','ไม่ปิดการขาย'], 'superseded':['badge-partial','bidding'] };
   var s = m[status] || m.pending;
@@ -2145,7 +2226,8 @@ function reviseOffer(ref, mode) {
       other:      idx === 0 ? (d.other || '') : '',
       period: d.period || '', offerPrice: d.offerPrice || '',
       offerMargin: d.offerMargin || '', qtyMonth: d.qtyMonth || '',
-      offerDate: d.offerDate || '', valid: d.valid || ''
+      offerDate: d.offerDate || '', valid: d.valid || '',
+      freight: d.freight || '', mtPerCont: d.mtPerCont || '', fx: d.fx || ''
     });
   });
 
@@ -2389,7 +2471,7 @@ function renderCards() {
     }
 
     var offerDetail = '';
-    if (d.period || d.offerPrice || d.offerMargin || d.qtyMonth || d.offerDate || d.valid) {
+    if (d.period || d.offerPrice || d.offerMargin || d.qtyMonth || d.offerDate || d.valid || d.freight) {
       offerDetail = '<div class="offer-detail">' +
         (d.period ? '<div class="detail-cell"><div class="dl">Shipment ที่เสนอ</div><div class="dv">' + d.period + '</div></div>' : '') +
         (d.offerPrice ? '<div class="detail-cell"><div class="dl">ราคาเสนอ</div><div class="dv dv-red">$' + d.offerPrice + '/MT</div></div>' : '') +
@@ -2397,6 +2479,7 @@ function renderCards() {
         (d.qtyMonth ? '<div class="detail-cell"><div class="dl">Qty/Month</div><div class="dv">' + d.qtyMonth + '</div></div>' : '') +
         (d.offerDate ? '<div class="detail-cell"><div class="dl">Date ที่จะเสนอ</div><div class="dv">' + d.offerDate + '</div></div>' : '') +
         (d.valid ? '<div class="detail-cell"><div class="dl">Valid</div><div class="dv">' + d.valid + '</div></div>' : '') +
+        freightCells_(d) +
         (d.totalQty ? '<div class="detail-cell"><div class="dl">Total Qty</div><div class="dv">' + d.totalQty + '</div></div>' : '') +
         '</div>';
     }
