@@ -565,7 +565,7 @@ body::before, body::after { display: none !important; }
 .section-count{font-size:12px;color:var(--ink-muted)}
 
 /* ── MAIN ── */
-.main{padding:4px 24px 80px;max-width:1400px}
+.main{padding:4px 24px 80px;max-width:1400px;margin:0 auto}
 
 /* ── OFFER CARD ── */
 .offer-card{
@@ -919,6 +919,13 @@ body::before, body::after { display: none !important; }
 .port-frt{margin-top:7px;padding:8px 13px;background:rgba(230,247,240,0.7);border:1px solid #a7f3d0;border-radius:var(--radius-sm);font-size:13px;color:var(--green)}
 .port-frt b{font-family:"Kanit",sans-serif;font-size:15px}
 .port-frt-m{font-size:11px;color:var(--ink-muted)}
+/* จัดเนื้อหา dashboard ให้อยู่กึ่งกลางจอกว้าง */
+#approve-app .summary-bar,#approve-app .filter-bar,#approve-app .section-heading{
+  max-width:1400px;margin-left:auto;margin-right:auto;
+}
+/* ปุ่ม Approve / Reject กว้างเท่ากัน */
+#approve-app .vote-buttons{display:flex;gap:10px}
+#approve-app .vote-btn{flex:1 1 0;min-width:0;justify-content:center;text-align:center}
 /* ── ROLE SELECT (หน้าแรก: เลือกโหมด) ── */
 .role-overlay{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(135deg,#FBF7F5 0%,#F4EAED 50%,#EEE0E5 100%);overflow:auto}
 .role-card{background:var(--glass-strong);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--glass-border);border-radius:24px;box-shadow:var(--drop-shadow);padding:44px 40px 34px;text-align:center;width:640px;max-width:100%}
