@@ -781,6 +781,13 @@ body::before, body::after { display: none !important; }
 #approve-app .close-summary{display:flex;align-items:flex-end;gap:26px;flex-wrap:wrap;background:rgba(230,247,240,0.6);border:1px solid #a7f3d0;border-radius:var(--radius-sm);padding:12px 18px}
 #approve-app .close-cell .dl{font-size:10px}
 #approve-app .close-cell .dv{font-size:15px;color:var(--green)}
+#approve-app .sum-day-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:14px 20px 10px;border-bottom:1px solid var(--border)}
+#approve-app .sum-date{font-family:"Kanit",sans-serif;font-size:17px;font-weight:600;color:var(--ink)}
+#approve-app .sum-day-stats{display:flex;gap:18px;font-size:13px;color:var(--ink-soft)}
+#approve-app .sum-day-stats b{color:var(--red);font-family:"Kanit",sans-serif}
+#approve-app .sum-remark td{font-size:12px;color:var(--ink-soft);padding-top:0;border-bottom:1px solid #f5f5f5}
+#approve-app .sum-grand{display:flex;gap:26px;flex-wrap:wrap;justify-content:flex-end;align-items:baseline;margin-top:4px;padding:16px 22px;background:rgba(255,255,255,0.75);border:1px solid var(--border-strong);border-radius:var(--radius);font-size:14px;color:var(--ink-soft)}
+#approve-app .sum-grand b{font-family:"Kanit",sans-serif;font-size:19px;color:var(--red-dark)}
 #approve-app .close-remark-wrap{margin-top:12px}
 #approve-app .close-remark{width:100%;font-weight:400;font-size:13px;font-family:"Sarabun",sans-serif;resize:vertical;line-height:1.5}
 #approve-app .close-remark-note{margin-top:10px;font-size:13px;color:var(--ink-soft);background:rgba(255,255,255,0.55);border-left:3px solid var(--border-strong);border-radius:0 6px 6px 0;padding:8px 12px}
@@ -825,6 +832,7 @@ body::before, body::after { display: none !important; }
 .role-ic-offer{background:linear-gradient(135deg,#A63D5F,#7E2C48);box-shadow:0 6px 16px rgba(166,61,95,.4)}
 .role-ic-approve{background:linear-gradient(135deg,#3C8A66,#1E7A4A);box-shadow:0 6px 16px rgba(30,122,74,.35)}
 .role-ic-status{background:linear-gradient(135deg,#5B7DB1,#3B5A8C);box-shadow:0 6px 16px rgba(91,125,177,.35)}
+.role-ic-summary{background:linear-gradient(135deg,#8A6BA8,#5F4478);box-shadow:0 6px 16px rgba(138,107,168,.35)}
 .role-txt{flex:1}
 .role-arrow{font-size:20px;color:var(--ink-muted);transition:transform .2s,color .2s}
 .role-btn:hover .role-arrow{transform:translateX(5px);color:var(--orange)}
@@ -853,6 +861,11 @@ body::before, body::after { display: none !important; }
     <button class="role-btn" onclick="enterRole('status')">
       <span class="role-ic role-ic-status"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg></span>
       <span class="role-txt"><span class="role-t">เช็คสถานะ — Status</span><br><span class="role-d">ดูสถานะ offer ที่ส่งไป (ไม่ต้องใส่รหัส)</span></span>
+      <span class="role-arrow">→</span>
+    </button>
+    <button class="role-btn" onclick="enterRole('summary')">
+      <span class="role-ic role-ic-summary"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg></span>
+      <span class="role-txt"><span class="role-t">สรุปยอดขาย — Summary</span><br><span class="role-d">สรุปการปิดการขายรายวัน ปริมาณและมูลค่ารวม</span></span>
       <span class="role-arrow">→</span>
     </button>
     <div class="role-footer">SUNFOOD INTERNATIONAL</div>
@@ -1608,8 +1621,8 @@ function demoApprovals() {
     'SFD-2026-0103': { A1:'approved', remarkA1:'ราคาโอเค แต่รอเช็คสต็อก skin' },
     'SFD-2026-0104': { A1:'approved', A2:'approved', remarkA1:'อนุมัติ', remarkA2:'ลูกค้าใหม่ ให้ลองดู' },
     'SFD-2026-0105': { A1:'approved', A2:'approved' },
-    'SFD-2026-0106': { A1:'approved', A2:'approved', close:'closed-won', closeShipment:'Nov/Dec 2026', closeQty:'48 MT / 2 FCL', closePrice:'3,300', closeMargin:'41.2%', closeRemark:'ลูกค้าตกลงตามราคาเสนอ ขอเลื่อน shipment เป็นต้นเดือน' },
-    'SFD-2026-0107': { A1:'approved', A2:'approved', close:'closed-won', closeShipment:'Jan 2027', closeQty:'24 MT / 1 FCL', closePrice:'3,900', closeMargin:'47.5%' },
+    'SFD-2026-0106': { A1:'approved', A2:'approved', close:'closed-won', closeShipment:'Nov/Dec 2026', closeQty:'48 MT / 2 FCL', closePrice:'3,300', closeMargin:'41.2%', closeRemark:'ลูกค้าตกลงตามราคาเสนอ ขอเลื่อน shipment เป็นต้นเดือน', closeDate:'2026-09-05' },
+    'SFD-2026-0107': { A1:'approved', A2:'approved', close:'closed-won', closeShipment:'Jan 2027', closeQty:'24 MT / 1 FCL', closePrice:'3,900', closeMargin:'47.5%', closeDate:'2026-09-06' },
     'SFD-2026-0108': { A1:'approved', A2:'approved', close:'closed-lost' },
     'SFD-2026-0109': { A1:'rejected', remarkA1:'margin ต่ำกว่าเกณฑ์ ขอปรับราคาใหม่' },
     'SFD-2026-0110': { A1:'approved' }
@@ -1669,7 +1682,8 @@ function loadData() {
             approvals[d.ref].close = ov[0];
             if (ov.length >= 5) {
               CLOSE_FIELDS.forEach(function(f, i){ if (ov[i+1]) approvals[d.ref][f.key] = ov[i+1]; });
-              if (ov[5]) approvals[d.ref].closeRemark = ov.slice(5).join('|');
+              if (ov[5]) approvals[d.ref].closeRemark = ov[5];
+              if (ov[6]) approvals[d.ref].closeDate = ov[6];
             } else if (ov[1]) {
               approvals[d.ref].closePrice = ov[1];  // ข้อมูลเก่าที่เก็บแค่ราคา
             }
@@ -1946,6 +1960,22 @@ function postSaleState(ref, statusVal) {
   };
   fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) }).catch(function(){});
 }
+/* ── สรุปยอด: แปลงข้อความ qty/ราคา เป็นตัวเลข ── */
+function numOf(str, unit) {
+  if (!str) return 0;
+  var t = String(str).replace(/,/g, '');
+  var m = unit ? t.match(new RegExp('([\\d.]+)\\s*' + unit, 'i')) : null;
+  if (!m) m = t.match(/([\d.]+)/);
+  return m ? (parseFloat(m[1]) || 0) : 0;
+}
+function thaiDate(iso) {
+  if (!iso) return 'ไม่ระบุวันที่';
+  var p = iso.split('-');
+  if (p.length !== 3) return iso;
+  var months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  return parseInt(p[2], 10) + ' ' + months[parseInt(p[1], 10) - 1] + ' ' + (parseInt(p[0], 10) + 543);
+}
+
 /* ผลการขายมี 4 ช่อง เก็บรวมในคอลัมน์ "สถานะรวม" คั่นด้วย |
    รูปแบบ: closed-won|shipment|qty|price|margin  */
 var CLOSE_FIELDS = [
@@ -1973,10 +2003,15 @@ function closeSale(ref, result) {
     vals.push(remark);
   } else {
     CLOSE_FIELDS.forEach(function(f){ delete approvals[ref][f.key]; });
-    if (remark) vals = ['', '', '', '', remark];
+    vals = ['', '', '', '', remark];
   }
+  var d = new Date();
+  var pad = function(n){ return (n < 10 ? '0' : '') + n; };
+  var closeDate = approvals[ref].closeDate || (d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()));
+  vals.push(closeDate);
   approvals[ref].close = result;
   approvals[ref].closeRemark = remark;
+  approvals[ref].closeDate = closeDate;
   postSaleState(ref, vals ? result + '|' + vals.join('|') : result);
   showToast(result === 'closed-won'
     ? 'บันทึกแล้ว: ปิดการขายได้ ' + approvals[ref].closePrice + ' USD/MT'
@@ -1987,6 +2022,7 @@ function undoClose(ref) {
   if (approvals[ref]) {
     delete approvals[ref].close;
     delete approvals[ref].closeRemark;
+    delete approvals[ref].closeDate;
     CLOSE_FIELDS.forEach(function(f){ delete approvals[ref][f.key]; });
   }
   postSaleState(ref, 'approved');
@@ -2053,6 +2089,7 @@ function saveRemarks() {
 }
 
 function renderCards() {
+  if (window._summaryMode) { renderSummary_(); return; }
   saveRemarks();
   var data = DATA;
   if (window._statusMode) {
@@ -2220,6 +2257,82 @@ function renderCards() {
   c.innerHTML = html;
 }
 
+/* ── หน้าสรุปการปิดการขายรายวัน ── */
+function renderSummary_() {
+  var c = document.getElementById('cards');
+  var won = DATA.filter(function(d){ return getStatus(d.ref) === 'closed-won'; });
+
+  var byDay = {};
+  won.forEach(function(d) {
+    var av = approvals[d.ref] || {};
+    var key = av.closeDate || '';
+    (byDay[key] = byDay[key] || []).push({ d: d, av: av });
+  });
+  var days = Object.keys(byDay).sort(function(a, b){ return b.localeCompare(a); });
+
+  var grandQty = 0, grandVal = 0;
+  won.forEach(function(d){
+    var av = approvals[d.ref] || {};
+    var q = numOf(av.closeQty, 'MT'), p = numOf(av.closePrice);
+    grandQty += q; grandVal += q * p;
+  });
+  var fmt = function(n, dec){ return n.toLocaleString('en-US', {minimumFractionDigits: dec||0, maximumFractionDigits: dec||0}); };
+
+  document.getElementById('st-total').textContent = days.length;
+  document.getElementById('st-pend').textContent  = won.length;
+  document.getElementById('st-appr').textContent  = fmt(grandQty, grandQty % 1 ? 2 : 0);
+  document.getElementById('st-rej').textContent   = fmt(grandVal);
+  document.getElementById('sec-count').textContent = 'ปิดการขายได้ ' + won.length + ' รายการ';
+
+  if (!won.length) {
+    c.innerHTML = '<div class="empty-state"><h3>ยังไม่มีรายการที่ปิดการขาย</h3><p style="margin-top:8px;font-size:13px;color:var(--ink-muted)">เมื่อทีมขายบันทึกผล "ปิดการขายได้" ในหน้าเช็คสถานะ รายการจะมาแสดงที่นี่</p></div>';
+    return;
+  }
+
+  var html = '';
+  days.forEach(function(day) {
+    var items = byDay[day];
+    var dq = 0, dv = 0;
+    items.forEach(function(it){
+      var q = numOf(it.av.closeQty, 'MT'), p = numOf(it.av.closePrice);
+      dq += q; dv += q * p;
+    });
+    var rows = items.map(function(it) {
+      var prod = (it.d.products || []).map(function(p){ return p.type || ''; }).filter(Boolean).join(', ') || '—';
+      return '<tr>' +
+        '<td><div class="pt">' + (it.d.company || '—') + '</div><div class="pc">' + it.d.ref + (it.d.salesUser ? ' · ' + it.d.salesUser : '') + '</div></td>' +
+        '<td style="color:var(--ink-soft)">' + prod + '</td>' +
+        '<td style="color:var(--ink-soft)">' + (it.av.closeShipment || '—') + '</td>' +
+        '<td><b>' + (it.av.closeQty || '—') + '</b></td>' +
+        '<td><span class="pv">' + (it.av.closePrice || '—') + '</span></td>' +
+        '<td><span class="mg ' + mgClass(it.av.closeMargin) + '">' + (it.av.closeMargin || '—') + '</span></td>' +
+        '</tr>' +
+        (it.av.closeRemark ? '<tr class="sum-remark"><td colspan="6"><b>Remark:</b> ' + it.av.closeRemark + '</td></tr>' : '');
+    }).join('');
+
+    html += '<div class="offer-card sum-day">' +
+      '<div class="sum-day-head">' +
+        '<div class="sum-date">' + thaiDate(day) + '</div>' +
+        '<div class="sum-day-stats">' +
+          '<span>' + items.length + ' ดีล</span>' +
+          '<span>รวม <b>' + fmt(dq, dq % 1 ? 2 : 0) + '</b> MT</span>' +
+          '<span>มูลค่า <b>$' + fmt(dv) + '</b></span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="card-products" style="padding-top:0">' +
+        '<table class="prod-table"><thead><tr><th>ลูกค้า / REF</th><th>สินค้า</th><th>Shipment</th><th>Quantity</th><th>ราคาปิด</th><th>%Margin</th></tr></thead>' +
+        '<tbody>' + rows + '</tbody></table>' +
+      '</div>' +
+    '</div>';
+  });
+
+  html += '<div class="sum-grand"><span>รวมทั้งหมด ' + won.length + ' ดีล</span>' +
+    '<span>ปริมาณรวม <b>' + fmt(grandQty, grandQty % 1 ? 2 : 0) + ' MT</b></span>' +
+    '<span>มูลค่ารวม <b>$' + fmt(grandVal) + '</b></span></div>';
+
+  c.innerHTML = html;
+}
+
 function showToast(msg, type) {
   var t = document.getElementById('toast');
   t.textContent = msg;
@@ -2233,11 +2346,29 @@ renderCards();
 /* ── ROLE SWITCH ── */
 function enterRole(role) {
   document.getElementById('role-overlay').style.display = 'none';
-  var useApproveApp = role === 'approve' || role === 'status';
+  var useApproveApp = role === 'approve' || role === 'status' || role === 'summary';
   window._statusMode = role === 'status';
+  window._summaryMode = role === 'summary';
   document.body.classList.toggle('mode-approve', useApproveApp);
   document.getElementById('approve-app').style.display = useApproveApp ? 'block' : 'none';
   document.getElementById('offer-app').style.display = useApproveApp ? 'none' : 'block';
+  if (window._summaryMode) {
+    document.getElementById('ap-login-overlay').style.display = 'none';
+    document.getElementById('hdr-user').textContent = 'สรุปยอดขาย';
+    var lo0 = document.querySelector('#approve-app .btn-logout'); if (lo0) lo0.style.display = 'none';
+    var fbar = document.querySelector('#approve-app .filter-bar'); if (fbar) fbar.style.display = 'none';
+    var hd0 = document.querySelector('#approve-app .section-heading h2');
+    if (hd0) hd0.textContent = 'สรุปการปิดการขายรายวัน';
+    var sub0 = document.querySelector('#approve-app .hdr-sub');
+    if (sub0) sub0.textContent = 'Daily Sales Summary';
+    var lbl = {'st-total':['วันที่มีการปิดขาย','Days'], 'st-pend':['ดีลที่ปิดได้','Deals Won'], 'st-appr':['ปริมาณรวม (MT)','Total Volume'], 'st-rej':['มูลค่ารวม (USD)','Total Value']};
+    Object.keys(lbl).forEach(function(id){
+      var v = document.getElementById(id); if (!v) return;
+      v.parentNode.querySelector('.stat-label').textContent = lbl[id][0];
+      v.parentNode.querySelector('.stat-sub').textContent = lbl[id][1];
+    });
+    loadData();
+  }
   if (window._statusMode) {
     curFilter = 'approved';
     document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
