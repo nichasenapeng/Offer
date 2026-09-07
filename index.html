@@ -489,6 +489,7 @@ body::before, body::after { display: none !important; }
   box-shadow:0 6px 20px rgba(192,21,42,.35);
 }
 .btn-login:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(192,21,42,.45)}
+.ap-login-hint{font-size:13px;color:var(--ink-muted);margin-bottom:18px;line-height:1.6}
 .ap-login-footer{font-size:10px;color:var(--ink-muted);letter-spacing:.07em;margin-top:18px}
 
 /* ── HEADER ── */
@@ -1186,12 +1187,8 @@ body::before, body::after { display: none !important; }
     <div class="ap-login-logo">SUN<span>FOOD</span></div>
     <div class="login-sub">Offer Approval System</div>
 
-    <div class="pw-wrap" style="margin-bottom:12px">
-      <input class="pw-input" id="pw" type="password" placeholder="รหัสผ่าน" maxlength="20"
-        onkeydown="if(event.key==='Enter')doLogin()">
-    </div>
-    <div class="pw-err" id="pw-err">รหัสผ่านไม่ถูกต้อง</div>
-    <button class="btn-login" onclick="doLogin()">เข้าสู่ระบบ →</button>
+    <div class="ap-login-hint">กด Enter หรือปุ่มด้านล่างเพื่อเข้าสู่ระบบ</div>
+    <button class="btn-login" id="ap-enter" onclick="doLogin()">เข้าสู่ระบบ →</button>
     <div class="ap-login-footer">SUNFOOD INTERNATIONAL · OFFER APPROVAL DASHBOARD</div>
   </div>
 </div>
@@ -1706,7 +1703,6 @@ document.addEventListener('click', function(e) {
 </script>
 <script>
 
-var PASS = '362254';
 var curUser = null, curKey = null, curFilter = 'pending';
 var approvals = {};
 
@@ -2166,20 +2162,28 @@ var _PLACEHOLDER = [
 
 // ── LOGIN — password only ──
 function doLogin() {
-  var pw = document.getElementById('pw').value;
-  var err = document.getElementById('pw-err');
-  if (pw !== PASS) { err.classList.add('show'); document.getElementById('pw').value = ''; return; }
-  err.classList.remove('show');
   curUser = 'Approver 1'; curKey = 'A1';
   document.getElementById('ap-login-overlay').style.display = 'none';
   document.getElementById('hdr-user').textContent = curUser;
   loadData(); // ดึงข้อมูลสดจาก Google Sheets
 }
 
+/* กด Enter ที่ไหนก็ได้บนหน้า login ผู้อนุมัติ = เข้าสู่ระบบ */
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Enter') return;
+  var ov = document.getElementById('ap-login-overlay');
+  if (!ov || ov.style.display === 'none' || curUser) return;
+  var app = document.getElementById('approve-app');
+  if (!app || app.style.display === 'none') return;
+  e.preventDefault();
+  doLogin();
+});
+
 function doLogout() {
   curUser = null; curKey = null; DATA = [];
-  document.getElementById('pw').value = '';
   document.getElementById('ap-login-overlay').style.display = 'flex';
+  var eb = document.getElementById('ap-enter');
+  if (eb) setTimeout(function(){ eb.focus(); }, 60);
 }
 
 // ── FILTER ──
@@ -2974,6 +2978,10 @@ function enterRole(role) {
   document.getElementById('setting-app').style.display = isSetting ? 'block' : 'none';
   document.getElementById('offer-app').style.display = (useApproveApp || isSetting) ? 'none' : 'block';
   if (isSetting) { renderSettings(); return; }
+  if (role === 'approve') {
+    var enterBtn = document.getElementById('ap-enter');
+    if (enterBtn) setTimeout(function(){ enterBtn.focus(); }, 60);
+  }
   if (window._summaryMode) {
     document.getElementById('ap-login-overlay').style.display = 'none';
     document.getElementById('hdr-user').textContent = 'สรุปยอดขาย';
