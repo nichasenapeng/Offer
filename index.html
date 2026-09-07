@@ -1169,11 +1169,6 @@ body::before, body::after { display: none !important; }
     </div>
 
     <div class="set-card">
-      <div class="set-title">ข้อมูลระบบ</div>
-      <div class="set-rows" id="set-info"></div>
-    </div>
-
-    <div class="set-card">
       <div class="set-title">ข้อมูลในเครื่องนี้</div>
       <div class="set-hint">ฟอร์มเก็บสำเนาใบเสนอราคาที่เคยส่งไว้ในเบราว์เซอร์ เผื่อไว้กู้ตอนส่งไม่สำเร็จ</div>
       <div class="set-rows" id="set-local"></div>
@@ -2956,12 +2951,6 @@ function renderSettings() {
   document.getElementById('set-mtcont').value = cfg.mtPerCont || '';
 
   var row = function(k, v){ return '<div class="set-row"><span>' + k + '</span><b>' + v + '</b></div>'; };
-  document.getElementById('set-info').innerHTML =
-    row('รหัสผ่านผู้อนุมัติ', PASS) +
-    row('ทีมขาย', document.querySelectorAll('#offer-app .user-btn').length + ' คน / ' +
-                  document.querySelectorAll('#offer-app .team-name').length + ' ทีม') +
-    row('โหมดใช้งาน', '5 โหมด (Offer · Approve · Status · Summary · Setting)') +
-    row('ที่อยู่เว็บ', location.host || 'local');
 
   var n = 0, last = '—';
   try {
