@@ -806,6 +806,9 @@ body::before, body::after { display: none !important; }
 .date-sel:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(166,61,95,.15)}
 
 #approve-app .close-date-wrap{margin-bottom:14px}
+#approve-app .rej-reasons{margin-top:10px;display:flex;flex-direction:column;gap:8px}
+#approve-app .rej-reason{font-size:13px;color:var(--ink-soft);background:rgba(255,255,255,0.6);border-left:3px solid var(--red);border-radius:0 6px 6px 0;padding:9px 13px}
+#approve-app .rej-reason span{display:block;font-size:10px;font-weight:600;color:var(--red);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
 #approve-app .close-remark-wrap{margin-top:12px}
 #approve-app .close-remark{width:100%;font-weight:400;font-size:13px;font-family:"Sarabun",sans-serif;resize:vertical;line-height:1.5}
 #approve-app .close-remark-note{margin-top:10px;font-size:13px;color:var(--ink-soft);background:rgba(255,255,255,0.55);border-left:3px solid var(--border-strong);border-radius:0 6px 6px 0;padding:8px 12px}
@@ -2158,10 +2161,10 @@ function renderCards() {
   saveRemarks();
   var data = DATA;
   if (window._statusMode) {
-    // โหมดเช็คสถานะ: เห็นเฉพาะ offer ที่อนุมัติครบแล้วเท่านั้น
+    // โหมดเช็คสถานะ: เห็นเฉพาะใบที่ผู้อนุมัติตัดสินแล้ว (อนุมัติครบ / ปิดการขาย / ถูกปฏิเสธ)
     data = DATA.filter(function(d) {
       var st = getStatus(d.ref);
-      return st === 'approved' || st === 'closed-won' || st === 'closed-lost';
+      return st === 'approved' || st === 'closed-won' || st === 'closed-lost' || st === 'rejected';
     });
   }
   var filt = data.filter(function(d){ return getStatus(d.ref) === curFilter; });
@@ -2169,9 +2172,10 @@ function renderCards() {
   var cnt = function(st){ return data.filter(function(d){ return getStatus(d.ref) === st; }).length; };
   document.getElementById('st-total').textContent = data.length;
   if (window._statusMode) {
-    document.getElementById('st-pend').textContent = cnt('approved');
-    document.getElementById('st-appr').textContent = cnt('closed-won');
-    document.getElementById('st-rej').textContent  = cnt('closed-lost');
+    document.getElementById('st-total').textContent = cnt('approved');
+    document.getElementById('st-pend').textContent  = cnt('closed-won');
+    document.getElementById('st-appr').textContent  = cnt('closed-lost');
+    document.getElementById('st-rej').textContent   = cnt('rejected');
   } else {
     document.getElementById('st-pend').textContent = cnt('pending');
     document.getElementById('st-appr').textContent = cnt('approved');
@@ -2260,7 +2264,21 @@ function renderCards() {
         '</div>' +
       '</div>';
     }
-    if (window._statusMode && (status === 'approved' || status === 'closed-won' || status === 'closed-lost')) {
+    if (window._statusMode && status === 'rejected') {
+      var who = [];
+      if (av.A1 === 'rejected') who.push('Approve 1');
+      if (av.A2 === 'rejected') who.push('Approve 2');
+      var reasons = '';
+      if (av.remarkA1) reasons += '<div class="rej-reason"><span>Approve 1</span>' + av.remarkA1 + '</div>';
+      if (av.remarkA2) reasons += '<div class="rej-reason"><span>Approve 2</span>' + av.remarkA2 + '</div>';
+      approveHtml = '<div class="approve-section"><div class="vote-slot-wrap" style="padding-left:0">' +
+        '<div class="slot-label">ผลการอนุมัติ</div>' +
+        '<div class="vote-result rejected">ถูกปฏิเสธโดย ' + (who.join(' และ ') || 'ผู้อนุมัติ') + '</div>' +
+        (reasons ? '<div class="rej-reasons">' + reasons + '</div>'
+                 : '<div class="close-remark-note">ผู้อนุมัติไม่ได้ระบุเหตุผลไว้</div>') +
+      '</div></div>';
+    }
+    else if (window._statusMode && (status === 'approved' || status === 'closed-won' || status === 'closed-lost')) {
       var closeInner;
       if (status === 'approved') {
         var inputs = CLOSE_FIELDS.map(function(f) {
@@ -2470,20 +2488,26 @@ function enterRole(role) {
   if (window._statusMode) {
     curFilter = 'approved';
     document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
-    ['filter-pending','filter-partial','filter-rejected'].forEach(function(id){
+    ['filter-pending','filter-partial'].forEach(function(id){
       var b = document.getElementById(id); if (b) b.style.display = 'none';
     });
     var fb = document.getElementById('filter-approved');
     if (fb) { fb.classList.add('active'); fb.textContent = 'รอปิดการขาย'; }
-    var st = {'st-pend':['รอปิดการขาย','Awaiting close'], 'st-appr':['ปิดการขายได้','Closed Won'], 'st-rej':['ไม่ปิดการขาย','Closed Lost']};
+    var rb = document.getElementById('filter-rejected');
+    if (rb) { rb.textContent = 'ถูกปฏิเสธ'; rb.parentNode.appendChild(rb); }  // ย้ายไปท้ายสุดตามลำดับงาน
+    var st = {
+      'st-total': ['รอปิดการขาย','Awaiting close','var(--yellow)'],
+      'st-pend':  ['ปิดการขายได้','Closed Won','var(--green)'],
+      'st-appr':  ['ไม่ปิดการขาย','Closed Lost','var(--ink-muted)'],
+      'st-rej':   ['ถูกปฏิเสธ','Rejected','var(--red)']
+    };
     Object.keys(st).forEach(function(id){
       var v = document.getElementById(id); if (!v) return;
       var box = v.parentNode;
       box.querySelector('.stat-label').textContent = st[id][0];
       box.querySelector('.stat-sub').textContent = st[id][1];
+      v.style.color = st[id][2];
     });
-    var tot = document.getElementById('st-total');
-    if (tot) { tot.parentNode.querySelector('.stat-label').textContent = 'อนุมัติครบทั้งหมด'; tot.parentNode.querySelector('.stat-sub').textContent = 'Approved Offers'; }
     var hd = document.querySelector('#approve-app .section-heading h2');
     if (hd) hd.textContent = 'ติดตามผลการขาย (หลังอนุมัติ)';
     var sub = document.querySelector('#approve-app .hdr-sub');
