@@ -801,6 +801,7 @@ input[type="number"]::-webkit-inner-spin-button { display: none; }
 .role-ic{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .role-ic-offer{background:linear-gradient(135deg,#EC4899,#BE185D);box-shadow:0 6px 16px rgba(236,72,153,.4)}
 .role-ic-approve{background:linear-gradient(135deg,#22B573,#1E7A4A);box-shadow:0 6px 16px rgba(30,122,74,.35)}
+.role-ic-status{background:linear-gradient(135deg,#3B82F6,#1D4ED8);box-shadow:0 6px 16px rgba(59,130,246,.35)}
 .role-txt{flex:1}
 .role-arrow{font-size:20px;color:var(--ink-muted);transition:transform .2s,color .2s}
 .role-btn:hover .role-arrow{transform:translateX(5px);color:var(--orange)}
@@ -824,6 +825,11 @@ input[type="number"]::-webkit-inner-spin-button { display: none; }
     <button class="role-btn" onclick="enterRole('approve')">
       <span class="role-ic role-ic-approve"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
       <span class="role-txt"><span class="role-t">ผู้อนุมัติ — Approve</span><br><span class="role-d">ดูและอนุมัติ/ปฏิเสธ offer (ใส่รหัสผ่าน)</span></span>
+      <span class="role-arrow">→</span>
+    </button>
+    <button class="role-btn" onclick="enterRole('status')">
+      <span class="role-ic role-ic-status"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg></span>
+      <span class="role-txt"><span class="role-t">เช็คสถานะ — Status</span><br><span class="role-d">ดูสถานะ offer ที่ส่งไป (ไม่ต้องใส่รหัส)</span></span>
       <span class="role-arrow">→</span>
     </button>
     <div class="role-footer">SUNFOOD INTERNATIONAL</div>
@@ -1889,7 +1895,7 @@ function renderCards() {
   document.getElementById('sec-count').textContent = 'แสดง ' + filt.length + ' จาก ' + data.length + ' รายการ';
 
   var c = document.getElementById('cards');
-  if (!curUser) { c.innerHTML = '<div class="empty-state"><div class="ei"></div><h3>กรุณาเข้าสู่ระบบ</h3></div>'; return; }
+  if (!curUser && !window._statusMode) { c.innerHTML = '<div class="empty-state"><div class="ei"></div><h3>กรุณาเข้าสู่ระบบ</h3></div>'; return; }
   if (!filt.length) { c.innerHTML = '<div class="empty-state"><div class="ei"></div><h3>ไม่พบรายการ</h3></div>'; return; }
 
   var isAppr = !!curUser;
@@ -2017,10 +2023,18 @@ renderCards();
 /* ── ROLE SWITCH ── */
 function enterRole(role) {
   document.getElementById('role-overlay').style.display = 'none';
-  var isApprove = role === 'approve';
-  document.body.classList.toggle('mode-approve', isApprove);
-  document.getElementById('approve-app').style.display = isApprove ? 'block' : 'none';
-  document.getElementById('offer-app').style.display = isApprove ? 'none' : 'block';
+  var useApproveApp = role === 'approve' || role === 'status';
+  window._statusMode = role === 'status';
+  document.body.classList.toggle('mode-approve', useApproveApp);
+  document.getElementById('approve-app').style.display = useApproveApp ? 'block' : 'none';
+  document.getElementById('offer-app').style.display = useApproveApp ? 'none' : 'block';
+  if (window._statusMode) {
+    document.getElementById('ap-login-overlay').style.display = 'none';
+    document.getElementById('hdr-user').textContent = 'ดูสถานะ (อ่านอย่างเดียว)';
+    var lo = document.querySelector('#approve-app .btn-logout');
+    if (lo) lo.style.display = 'none';
+    loadData();
+  }
 }
 function switchRole() { location.reload(); }
 
