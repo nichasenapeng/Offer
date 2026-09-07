@@ -911,6 +911,11 @@ body::before, body::after { display: none !important; }
 .frt-val:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 3px rgba(166,61,95,.15)}
 .frt-unit{font-size:11px;color:var(--ink-muted);width:28px}
 .frt-src{margin-top:5px;font-size:11px;color:var(--green);line-height:1.4}
+.link-actions{display:flex;gap:8px;align-items:center}
+.link-open{font-family:"Kanit",sans-serif;font-size:12px;color:var(--orange);text-decoration:none;padding:5px 12px;border:1.5px solid var(--border-strong);border-radius:16px;transition:all .18s}
+.link-open:hover{background:var(--orange);color:#fff;border-color:var(--orange)}
+.link-copy{font-family:"Kanit",sans-serif;font-size:12px;color:var(--ink-soft);background:rgba(255,255,255,0.9);border:1.5px solid var(--border);border-radius:16px;padding:5px 12px;cursor:pointer;transition:all .18s}
+.link-copy:hover{border-color:var(--orange);color:var(--orange)}
 /* ── ROLE SELECT (หน้าแรก: เลือกโหมด) ── */
 .role-overlay{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(135deg,#FBF7F5 0%,#F4EAED 50%,#EEE0E5 100%);overflow:auto}
 .role-card{background:var(--glass-strong);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--glass-border);border-radius:24px;box-shadow:var(--drop-shadow);padding:44px 40px 34px;text-align:center;width:640px;max-width:100%}
@@ -1186,7 +1191,9 @@ body::before, body::after { display: none !important; }
 
     <div class="set-card">
       <div class="set-title">ลิงก์ระบบ</div>
-      <div class="set-links">
+      <div class="set-hint">ลิงก์เข้าโหมดตรง — คัดลอกไปส่งให้ทีม จะเปิดเข้าหน้านั้นทันทีไม่ต้องเลือกโหมด</div>
+      <div class="set-rows" id="set-modelinks"></div>
+      <div class="set-links" style="margin-top:14px">
         <a class="set-btn" target="_blank" rel="noopener" href="https://docs.google.com/spreadsheets/d/15fxIAqk32f898h4nN-CG1HstFe3GPSy-33ALiJlJHwU/edit">เปิดชีท Offer</a>
         <a class="set-btn" target="_blank" rel="noopener" href="https://docs.google.com/spreadsheets/d/1ZKrNVK1Mgffl1UqTGw8QxMld3hpTnlfZgpcgrwoNyHU/edit">เปิดชีท Approval</a>
         <a class="set-btn" target="_blank" rel="noopener" href="https://github.com/nichasenapeng/Offer_price">โค้ดระบบ (GitHub)</a>
@@ -3062,8 +3069,33 @@ function clearLocalCopies() {
   try { localStorage.removeItem('sf_requests'); } catch (e) {}
   renderSettings();
 }
+function modeLink(mode) {
+  var u = new URL(location.href);
+  u.searchParams.delete('demo');
+  u.searchParams.set('mode', mode);
+  return u.toString();
+}
+function copyLink(mode, btn) {
+  var url = modeLink(mode);
+  var done = function(){ var t = btn.textContent; btn.textContent = 'คัดลอกแล้ว'; setTimeout(function(){ btn.textContent = t; }, 1800); };
+  if (navigator.clipboard) navigator.clipboard.writeText(url).then(done, function(){ prompt('คัดลอกลิงก์นี้', url); });
+  else prompt('คัดลอกลิงก์นี้', url);
+}
+function renderModeLinks() {
+  var modes = [['offer','ทีมขาย — กรอก Offer'], ['approve','ผู้อนุมัติ — Approve'],
+               ['status','เช็คสถานะ — Status'], ['summary','สรุปยอดขาย — Summary']];
+  document.getElementById('set-modelinks').innerHTML = modes.map(function(m) {
+    return '<div class="set-row"><span>' + m[1] + '</span>' +
+      '<span class="link-actions">' +
+        '<a class="link-open" href="' + modeLink(m[0]) + '">เปิด</a>' +
+        '<button class="link-copy" onclick="copyLink(\'' + m[0] + '\', this)">คัดลอกลิงก์</button>' +
+      '</span></div>';
+  }).join('');
+}
+
 function renderSettings() {
   renderFreightTable();
+  renderModeLinks();
   var cfg = getSettings();
   document.getElementById('set-fx').value = cfg.fx || '';
   document.getElementById('set-mtcont').value = cfg.mtPerCont || '';
@@ -3153,7 +3185,20 @@ function enterRole(role) {
     loadData();
   }
 }
-function switchRole() { location.reload(); }
+function switchRole() {
+  // กลับหน้าหลัก: ตัด ?mode= ออก ไม่งั้นจะเด้งเข้าโหมดเดิมซ้ำ
+  var u = new URL(location.href);
+  u.searchParams.delete('mode');
+  location.href = u.toString();
+}
+
+/* เปิดโหมดตรงจากลิงก์ เช่น ?mode=offer */
+(function() {
+  var m = new URLSearchParams(location.search).get('mode');
+  if (['offer','approve','status','summary','setting'].indexOf(m) !== -1) {
+    enterRole(m);
+  }
+})();
 
 </script>
 </body>
