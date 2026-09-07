@@ -773,10 +773,15 @@ body::before, body::after { display: none !important; }
 
 #offer-app .header-tag{margin-left:16px}
 .badge-lost{background:rgba(243,244,246,0.9);color:#6b7280;border:1px solid #d1d5db}
-#approve-app .close-row{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
-#approve-app .close-price-wrap label{display:block;font-size:10px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
-#approve-app .close-price-input{width:190px;padding:9px 14px;background:rgba(255,255,255,0.9);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:"Kanit",sans-serif;font-size:15px;font-weight:600;color:var(--ink);transition:border-color .2s,box-shadow .2s}
-#approve-app .close-price-input:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(166,61,95,.15)}
+#approve-app .close-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+#approve-app .close-field label{display:block;font-size:10px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+#approve-app .close-input{width:100%;padding:9px 14px;background:rgba(255,255,255,0.9);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:"Kanit",sans-serif;font-size:14px;font-weight:600;color:var(--ink);transition:border-color .2s,box-shadow .2s}
+#approve-app .close-input::placeholder{font-weight:400;font-size:13px;color:var(--ink-muted)}
+#approve-app .close-input:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(166,61,95,.15)}
+#approve-app .close-summary{display:flex;align-items:flex-end;gap:26px;flex-wrap:wrap;background:rgba(230,247,240,0.6);border:1px solid #a7f3d0;border-radius:var(--radius-sm);padding:12px 18px}
+#approve-app .close-cell .dl{font-size:10px}
+#approve-app .close-cell .dv{font-size:15px;color:var(--green)}
+@media(max-width:768px){#approve-app .close-grid{grid-template-columns:1fr 1fr}}
 /* skeleton loader */
 @keyframes skShimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}
 #approve-app .sk,#approve-app .summary-bar.loading .stat-value{
@@ -1600,8 +1605,8 @@ function demoApprovals() {
     'SFD-2026-0103': { A1:'approved', remarkA1:'ราคาโอเค แต่รอเช็คสต็อก skin' },
     'SFD-2026-0104': { A1:'approved', A2:'approved', remarkA1:'อนุมัติ', remarkA2:'ลูกค้าใหม่ ให้ลองดู' },
     'SFD-2026-0105': { A1:'approved', A2:'approved' },
-    'SFD-2026-0106': { A1:'approved', A2:'approved', close:'closed-won', closePrice:'3,300' },
-    'SFD-2026-0107': { A1:'approved', A2:'approved', close:'closed-won', closePrice:'3,900' },
+    'SFD-2026-0106': { A1:'approved', A2:'approved', close:'closed-won', closeShipment:'Nov/Dec 2026', closeQty:'48 MT / 2 FCL', closePrice:'3,300', closeMargin:'41.2%' },
+    'SFD-2026-0107': { A1:'approved', A2:'approved', close:'closed-won', closeShipment:'Jan 2027', closeQty:'24 MT / 1 FCL', closePrice:'3,900', closeMargin:'47.5%' },
     'SFD-2026-0108': { A1:'approved', A2:'approved', close:'closed-lost' },
     'SFD-2026-0109': { A1:'rejected', remarkA1:'margin ต่ำกว่าเกณฑ์ ขอปรับราคาใหม่' },
     'SFD-2026-0110': { A1:'approved' }
@@ -1659,7 +1664,11 @@ function loadData() {
           var ov = d._sheetOverall.split('|');
           if (ov[0] === 'closed-won' || ov[0] === 'closed-lost') {
             approvals[d.ref].close = ov[0];
-            if (ov[1]) approvals[d.ref].closePrice = ov[1];
+            if (ov.length >= 5) {
+              CLOSE_FIELDS.forEach(function(f, i){ if (ov[i+1]) approvals[d.ref][f.key] = ov[i+1]; });
+            } else if (ov[1]) {
+              approvals[d.ref].closePrice = ov[1];  // ข้อมูลเก่าที่เก็บแค่ราคา
+            }
           }
         }
       });
@@ -1933,23 +1942,42 @@ function postSaleState(ref, statusVal) {
   };
   fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) }).catch(function(){});
 }
+/* ผลการขายมี 4 ช่อง เก็บรวมในคอลัมน์ "สถานะรวม" คั่นด้วย |
+   รูปแบบ: closed-won|shipment|qty|price|margin  */
+var CLOSE_FIELDS = [
+  { key: 'closeShipment', id: 'close-shipment', label: 'Shipment ที่ปิดการขาย', from: 'period' },
+  { key: 'closeQty',      id: 'close-qty',      label: 'Quantity',              from: 'qtyMonth' },
+  { key: 'closePrice',    id: 'close-price',    label: 'ราคาปิดการขาย (USD/MT)', from: 'offerPrice' },
+  { key: 'closeMargin',   id: 'close-margin',   label: '%Margin',               from: 'offerMargin' }
+];
+
 function closeSale(ref, result) {
   if (!approvals[ref]) approvals[ref] = {};
-  var price = '';
+  var vals = [];
   if (result === 'closed-won') {
-    var el = document.getElementById('close-price-' + ref);
-    price = el ? el.value.trim() : '';
-    if (!price) { showToast('กรุณากรอกยอดที่ปิดได้ก่อน', 'red'); if (el) el.focus(); return; }
-    price = price.replace(/\|/g, '');
+    for (var i = 0; i < CLOSE_FIELDS.length; i++) {
+      var f = CLOSE_FIELDS[i];
+      var el = document.getElementById(f.id + '-' + ref);
+      var v = el ? el.value.trim().replace(/\|/g, '') : '';
+      if (!v) { showToast('กรุณากรอก "' + f.label + '" ก่อน', 'red'); if (el) el.focus(); return; }
+      vals.push(v);
+      approvals[ref][f.key] = v;
+    }
+  } else {
+    CLOSE_FIELDS.forEach(function(f){ delete approvals[ref][f.key]; });
   }
   approvals[ref].close = result;
-  approvals[ref].closePrice = price;
-  postSaleState(ref, price ? result + '|' + price : result);
-  showToast(result === 'closed-won' ? 'บันทึกแล้ว: ปิดการขายได้ ' + price : 'บันทึกแล้ว: ไม่ปิดการขาย', result === 'closed-won' ? 'green' : 'red');
+  postSaleState(ref, vals.length ? result + '|' + vals.join('|') : result);
+  showToast(result === 'closed-won'
+    ? 'บันทึกแล้ว: ปิดการขายได้ ' + approvals[ref].closePrice + ' USD/MT'
+    : 'บันทึกแล้ว: ไม่ปิดการขาย', result === 'closed-won' ? 'green' : 'red');
   renderCards();
 }
 function undoClose(ref) {
-  if (approvals[ref]) { delete approvals[ref].close; delete approvals[ref].closePrice; }
+  if (approvals[ref]) {
+    delete approvals[ref].close;
+    CLOSE_FIELDS.forEach(function(f){ delete approvals[ref][f.key]; });
+  }
   postSaleState(ref, 'approved');
   showToast('ยกเลิกผลการขายแล้ว — กลับเป็นรอปิดการขาย');
   renderCards();
@@ -2122,16 +2150,24 @@ function renderCards() {
     if (window._statusMode && (status === 'approved' || status === 'closed-won' || status === 'closed-lost')) {
       var closeInner;
       if (status === 'approved') {
-        closeInner = '<div class="close-row">' +
-          '<div class="close-price-wrap"><label>ยอดที่ปิดได้ (USD/MT)</label>' +
-          '<input id="close-price-' + d.ref + '" class="close-price-input" type="text" placeholder="เช่น ' + (d.offerPrice || '3,900') + '" value="' + (av.closePrice || '') + '"></div>' +
-          '<div class="vote-buttons">' +
+        var inputs = CLOSE_FIELDS.map(function(f) {
+          return '<div class="close-field"><label>' + f.label + '</label>' +
+            '<input id="' + f.id + '-' + d.ref + '" class="close-input" type="text" placeholder="' +
+            (d[f.from] ? 'เสนอไว้ ' + d[f.from] : '—') + '" value="' + (av[f.key] || '') + '"></div>';
+        }).join('');
+        closeInner = '<div class="close-grid">' + inputs + '</div>' +
+          '<div class="vote-buttons" style="margin-top:12px">' +
             '<button class="vote-btn btn-approve" onclick="closeSale(\'' + d.ref + '\',\'closed-won\')">ปิดการขายได้</button>' +
             '<button class="vote-btn btn-reject" onclick="closeSale(\'' + d.ref + '\',\'closed-lost\')">ไม่ปิดการขาย</button>' +
-          '</div></div>';
+          '</div>';
+      } else if (status === 'closed-won') {
+        var cells = CLOSE_FIELDS.map(function(f) {
+          return '<div class="close-cell"><div class="dl">' + f.label + '</div><div class="dv">' + (av[f.key] || '—') + '</div></div>';
+        }).join('');
+        closeInner = '<div class="close-summary">' + cells +
+          '<button class="btn-undo" onclick="undoClose(\'' + d.ref + '\')">แก้ไข</button></div>';
       } else {
-        closeInner = '<div class="vote-result ' + (status === 'closed-won' ? 'approved' : 'rejected') + '">' +
-          (status === 'closed-won' ? 'ปิดการขายได้' + (av.closePrice ? ' ที่ ' + av.closePrice + ' USD/MT' : '') : 'ไม่ปิดการขาย') +
+        closeInner = '<div class="vote-result rejected">ไม่ปิดการขาย' +
           '<button class="btn-undo" onclick="undoClose(\'' + d.ref + '\')">แก้ไข</button></div>';
       }
       approveHtml = '<div class="approve-section"><div class="vote-slot-wrap" style="padding-left:0">' +
