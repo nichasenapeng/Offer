@@ -793,6 +793,9 @@ body::before, body::after { display: none !important; }
 #approve-app .sk-dv{width:120px;max-width:80%;height:16px}
 #approve-app .sk-row{height:38px;margin:10px 0;border-radius:8px}
 #approve-app .summary-bar.loading .stat-value{color:transparent!important;width:56px;height:28px;margin:2px 0}
+.is-home{cursor:pointer;user-select:none;transition:opacity .18s}
+.is-home:hover{opacity:.72}
+.is-home:active{opacity:.55}
 /* ── ROLE SELECT (หน้าแรก: เลือกโหมด) ── */
 .role-overlay{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#FBF7F5 0%,#F4EAED 50%,#EEE0E5 100%)}
 .role-card{background:var(--glass-strong);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--glass-border);border-radius:24px;box-shadow:var(--drop-shadow);padding:48px 44px;text-align:center;width:400px;max-width:92vw}
@@ -864,9 +867,8 @@ body::before, body::after { display: none !important; }
 <div class="user-tag" id="user-tag"></div>
 
 <header class="site-header">
-  <div class="logo-text">SUN<span>FOOD</span></div>
+  <div class="logo-text is-home" onclick="switchRole()" title="กลับหน้าหลัก">SUN<span>FOOD</span></div>
   <div class="header-tag">INQUIRY FROM CUSTOMER</div>
-  <button onclick="switchRole()" title="กลับไปหน้าเลือกโหมด" style="margin-left:auto;margin-right:96px;background:rgba(255,255,255,.35);border:1px solid rgba(255,255,255,.6);border-radius:20px;padding:4px 12px;font-size:11px;font-family:Kanit,sans-serif;cursor:pointer;color:var(--ink-soft)">⇄ สลับโหมด</button>
 </header>
 
 <div class="hero">
@@ -1018,7 +1020,7 @@ body::before, body::after { display: none !important; }
 <!-- HEADER -->
 <div class="ap-site-header">
   <div class="hdr-left">
-    <div class="hdr-brand">SUN<span>FOOD</span></div>
+    <div class="hdr-brand is-home" onclick="switchRole()" title="กลับหน้าหลัก">SUN<span>FOOD</span></div>
     <div class="hdr-divider"></div>
     <div class="hdr-sub">Offer Approval Dashboard</div>
   </div>
@@ -1027,7 +1029,6 @@ body::before, body::after { display: none !important; }
     <button class="btn-refresh" onclick="loadData()" title="รีเฟรชข้อมูล">รีเฟรช</button>
     <div class="user-pill"><div class="udot"></div><span id="hdr-user">—</span></div>
     <button class="btn-logout" onclick="doLogout()">ออกจากระบบ</button>
-    <button class="btn-logout" onclick="switchRole()" title="กลับไปหน้าเลือกโหมด">⇄ สลับโหมด</button>
   </div>
 </div>
 
