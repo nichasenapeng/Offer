@@ -781,6 +781,9 @@ body::before, body::after { display: none !important; }
 #approve-app .close-summary{display:flex;align-items:flex-end;gap:26px;flex-wrap:wrap;background:rgba(230,247,240,0.6);border:1px solid #a7f3d0;border-radius:var(--radius-sm);padding:12px 18px}
 #approve-app .close-cell .dl{font-size:10px}
 #approve-app .close-cell .dv{font-size:15px;color:var(--green)}
+#approve-app .sum-filter{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px;padding:14px 18px;background:rgba(255,255,255,0.7);border:1px solid var(--border);border-radius:var(--radius)}
+#approve-app .sum-filter-label{font-size:12px;font-weight:600;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.06em}
+#approve-app .sum-filter-note{font-size:12px;color:var(--ink-muted)}
 #approve-app .sum-day-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:14px 20px 10px;border-bottom:1px solid var(--border)}
 #approve-app .sum-date{font-family:"Kanit",sans-serif;font-size:17px;font-weight:600;color:var(--ink)}
 #approve-app .sum-day-stats{display:flex;gap:18px;font-size:13px;color:var(--ink-soft)}
@@ -788,6 +791,13 @@ body::before, body::after { display: none !important; }
 #approve-app .sum-remark td{font-size:12px;color:var(--ink-soft);padding-top:0;border-bottom:1px solid #f5f5f5}
 #approve-app .sum-grand{display:flex;gap:26px;flex-wrap:wrap;justify-content:flex-end;align-items:baseline;margin-top:4px;padding:16px 22px;background:rgba(255,255,255,0.75);border:1px solid var(--border-strong);border-radius:var(--radius);font-size:14px;color:var(--ink-soft)}
 #approve-app .sum-grand b{font-family:"Kanit",sans-serif;font-size:19px;color:var(--red-dark)}
+.date-selects{display:flex;gap:8px;flex-wrap:wrap}
+.date-selects .date-sel{flex:0 0 auto;width:88px}
+.date-selects .date-sel-m{width:104px}
+.date-sel{padding:9px 10px;background:rgba(255,255,255,0.9);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:"Kanit",sans-serif;font-size:14px;font-weight:500;color:var(--ink);cursor:pointer;transition:border-color .2s,box-shadow .2s}
+.date-sel:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(166,61,95,.15)}
+
+#approve-app .close-date-wrap{margin-bottom:14px}
 #approve-app .close-remark-wrap{margin-top:12px}
 #approve-app .close-remark{width:100%;font-weight:400;font-size:13px;font-family:"Sarabun",sans-serif;resize:vertical;line-height:1.5}
 #approve-app .close-remark-note{margin-top:10px;font-size:13px;color:var(--ink-soft);background:rgba(255,255,255,0.55);border-left:3px solid var(--border-strong);border-radius:0 6px 6px 0;padding:8px 12px}
@@ -1960,6 +1970,40 @@ function postSaleState(ref, statusVal) {
   };
   fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) }).catch(function(){});
 }
+/* ── dropdown วัน/เดือน/ปี ── */
+var TH_MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+function pad2(n){ return (n < 10 ? '0' : '') + n; }
+function todayISO() {
+  var d = new Date();
+  return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate());
+}
+function dateSelects(idPrefix, iso, allowAll, onchange) {
+  var parts = (iso || '').split('-');
+  var y = parts[0] || '', m = parts[1] || '', dd = parts[2] || '';
+  var ch = onchange ? ' onchange="' + onchange + '"' : '';
+  var opt = function(val, label, sel){ return '<option value="' + val + '"' + (String(sel) === String(val) ? ' selected' : '') + '>' + label + '</option>'; };
+
+  var days = allowAll ? opt('', 'ทุกวัน', dd) : '';
+  for (var i = 1; i <= 31; i++) days += opt(pad2(i), i, dd);
+
+  var months = allowAll ? opt('', 'ทุกเดือน', m) : '';
+  for (var j = 1; j <= 12; j++) months += opt(pad2(j), TH_MONTHS[j-1], m);
+
+  var nowY = new Date().getFullYear();
+  var years = allowAll ? opt('', 'ทุกปี', y) : '';
+  for (var k = nowY - 2; k <= nowY + 1; k++) years += opt(k, k + 543, y);
+
+  return '<div class="date-selects">' +
+    '<select id="' + idPrefix + '-d" class="date-sel"' + ch + '>' + days + '</select>' +
+    '<select id="' + idPrefix + '-m" class="date-sel date-sel-m"' + ch + '>' + months + '</select>' +
+    '<select id="' + idPrefix + '-y" class="date-sel"' + ch + '>' + years + '</select>' +
+  '</div>';
+}
+function readDateSelects(idPrefix) {
+  var g = function(sfx){ var el = document.getElementById(idPrefix + sfx); return el ? el.value : ''; };
+  return { d: g('-d'), m: g('-m'), y: g('-y') };
+}
+
 /* ── สรุปยอด: แปลงข้อความ qty/ราคา เป็นตัวเลข ── */
 function numOf(str, unit) {
   if (!str) return 0;
@@ -2005,9 +2049,8 @@ function closeSale(ref, result) {
     CLOSE_FIELDS.forEach(function(f){ delete approvals[ref][f.key]; });
     vals = ['', '', '', '', remark];
   }
-  var d = new Date();
-  var pad = function(n){ return (n < 10 ? '0' : '') + n; };
-  var closeDate = approvals[ref].closeDate || (d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()));
+  var sel = readDateSelects('close-date-' + ref);
+  var closeDate = (sel.y && sel.m && sel.d) ? (sel.y + '-' + sel.m + '-' + sel.d) : (approvals[ref].closeDate || todayISO());
   vals.push(closeDate);
   approvals[ref].close = result;
   approvals[ref].closeRemark = remark;
@@ -2203,7 +2246,9 @@ function renderCards() {
             '<input id="' + f.id + '-' + d.ref + '" class="close-input" type="text" placeholder="' +
             (d[f.from] ? 'เสนอไว้ ' + d[f.from] : '—') + '" value="' + (av[f.key] || '') + '"></div>';
         }).join('');
-        closeInner = '<div class="close-grid">' + inputs + '</div>' +
+        closeInner = '<div class="close-field close-date-wrap"><label>วันที่ปิดการขาย</label>' +
+          dateSelects('close-date-' + d.ref, av.closeDate || todayISO(), false) + '</div>' +
+          '<div class="close-grid">' + inputs + '</div>' +
           '<div class="close-field close-remark-wrap"><label>Remark (ถ้ามี)</label>' +
           '<textarea id="close-remark-' + d.ref + '" class="close-input close-remark" rows="2" placeholder="เช่น ลูกค้าขอเลื่อน shipment, ต่อรองราคาลง, คู่แข่งเสนอต่ำกว่า">' + (av.closeRemark || '') + '</textarea></div>' +
           '<div class="vote-buttons" style="margin-top:12px">' +
@@ -2211,9 +2256,10 @@ function renderCards() {
             '<button class="vote-btn btn-reject" onclick="closeSale(\'' + d.ref + '\',\'closed-lost\')">ไม่ปิดการขาย</button>' +
           '</div>';
       } else if (status === 'closed-won') {
-        var cells = CLOSE_FIELDS.map(function(f) {
-          return '<div class="close-cell"><div class="dl">' + f.label + '</div><div class="dv">' + (av[f.key] || '—') + '</div></div>';
-        }).join('');
+        var cells = '<div class="close-cell"><div class="dl">วันที่ปิดการขาย</div><div class="dv">' + thaiDate(av.closeDate) + '</div></div>' +
+          CLOSE_FIELDS.map(function(f) {
+            return '<div class="close-cell"><div class="dl">' + f.label + '</div><div class="dv">' + (av[f.key] || '—') + '</div></div>';
+          }).join('');
         closeInner = '<div class="close-summary">' + cells +
           '<button class="btn-undo" onclick="undoClose(\'' + d.ref + '\')">แก้ไข</button></div>' +
           (av.closeRemark ? '<div class="close-remark-note"><b>Remark:</b> ' + av.closeRemark + '</div>' : '');
@@ -2258,9 +2304,29 @@ function renderCards() {
 }
 
 /* ── หน้าสรุปการปิดการขายรายวัน ── */
+var SUM_FILTER = { d: '', m: '', y: '' };
+function applySummaryFilter() {
+  SUM_FILTER = readDateSelects('sum-date');
+  renderSummary_();
+}
+function clearSummaryFilter() {
+  SUM_FILTER = { d: '', m: '', y: '' };
+  renderSummary_();
+}
+
 function renderSummary_() {
   var c = document.getElementById('cards');
-  var won = DATA.filter(function(d){ return getStatus(d.ref) === 'closed-won'; });
+  var allWon = DATA.filter(function(d){ return getStatus(d.ref) === 'closed-won'; });
+  var f = SUM_FILTER;
+  var won = allWon.filter(function(d) {
+    var iso = (approvals[d.ref] || {}).closeDate || '';
+    var p = iso.split('-');
+    if (f.y && p[0] !== f.y) return false;
+    if (f.m && p[1] !== f.m) return false;
+    if (f.d && p[2] !== f.d) return false;
+    return true;
+  });
+  var filtered = !!(f.d || f.m || f.y);
 
   var byDay = {};
   won.forEach(function(d) {
@@ -2284,12 +2350,22 @@ function renderSummary_() {
   document.getElementById('st-rej').textContent   = fmt(grandVal);
   document.getElementById('sec-count').textContent = 'ปิดการขายได้ ' + won.length + ' รายการ';
 
+  var filterBar = '<div class="sum-filter"><span class="sum-filter-label">เลือกวันที่:</span>' +
+    dateSelects('sum-date', (f.y || '') + '-' + (f.m || '') + '-' + (f.d || ''), true, 'applySummaryFilter()') +
+    (filtered ? '<button class="btn-undo" onclick="clearSummaryFilter()">ล้างตัวกรอง</button>' +
+      '<span class="sum-filter-note">แสดง ' + won.length + ' จาก ' + allWon.length + ' รายการ</span>' : '') +
+  '</div>';
+
   if (!won.length) {
-    c.innerHTML = '<div class="empty-state"><h3>ยังไม่มีรายการที่ปิดการขาย</h3><p style="margin-top:8px;font-size:13px;color:var(--ink-muted)">เมื่อทีมขายบันทึกผล "ปิดการขายได้" ในหน้าเช็คสถานะ รายการจะมาแสดงที่นี่</p></div>';
+    c.innerHTML = filterBar + '<div class="empty-state"><h3>' +
+      (filtered ? 'ไม่มีการปิดการขายในวันที่เลือก' : 'ยังไม่มีรายการที่ปิดการขาย') + '</h3>' +
+      '<p style="margin-top:8px;font-size:13px;color:var(--ink-muted)">' +
+      (filtered ? 'ลองเลือกวันอื่น หรือกดล้างตัวกรองเพื่อดูทั้งหมด' : 'เมื่อทีมขายบันทึกผล "ปิดการขายได้" ในหน้าเช็คสถานะ รายการจะมาแสดงที่นี่') +
+      '</p></div>';
     return;
   }
 
-  var html = '';
+  var html = filterBar;
   days.forEach(function(day) {
     var items = byDay[day];
     var dq = 0, dv = 0;
