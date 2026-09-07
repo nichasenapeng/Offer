@@ -1144,7 +1144,7 @@ body::before, body::after { display: none !important; }
   <button class="filter-btn" id="filter-rejected" onclick="setFilter('rejected',this)">ปฏิเสธ</button>
   <button class="filter-btn" id="filter-closed-won" onclick="setFilter('closed-won',this)">ปิดการขายได้</button>
   <button class="filter-btn" id="filter-closed-lost" onclick="setFilter('closed-lost',this)">ไม่ปิดการขาย</button>
-  <button class="filter-btn" id="filter-superseded" onclick="setFilter('superseded',this)">ออกใบใหม่แทน</button>
+  <button class="filter-btn" id="filter-superseded" onclick="setFilter('superseded',this)">bidding</button>
   <button class="filter-btn" id="filter-ext" onclick="setFilter('ext-pending',this)">ขอขยาย VALID</button>
 </div>
 
@@ -2040,7 +2040,7 @@ function getStatus(ref) {
 }
 
 function badge(status) {
-  var m = { pending:['badge-pending','รออนุมัติ'], approved:['badge-approved','อนุมัติครบ — รอปิดการขาย'], rejected:['badge-rejected','ปฏิเสธ'], partial:['badge-partial','Approve 1 แล้ว'], 'closed-won':['badge-approved','ปิดการขายได้'], 'closed-lost':['badge-lost','ไม่ปิดการขาย'], 'superseded':['badge-partial','ออกใบใหม่แทน'] };
+  var m = { pending:['badge-pending','รออนุมัติ'], approved:['badge-approved','อนุมัติครบ — รอปิดการขาย'], rejected:['badge-rejected','ปฏิเสธ'], partial:['badge-partial','Approve 1 แล้ว'], 'closed-won':['badge-approved','ปิดการขายได้'], 'closed-lost':['badge-lost','ไม่ปิดการขาย'], 'superseded':['badge-partial','bidding'] };
   var s = m[status] || m.pending;
   return '<span class="status-badge ' + s[0] + '">' + s[1] + '</span>';
 }
@@ -2095,7 +2095,7 @@ function decideExtension(ref, ok) {
   renderCards();
 }
 
-/* ── ลูกค้าขอ bidding → ออกใบใหม่ แล้วปิดใบเดิมเป็น "ออกใบใหม่แทน" ── */
+/* ── ลูกค้าขอ bidding → ออกใบใหม่ แล้วปิดใบเดิมเป็นสถานะ bidding ── */
 function requestBidding(ref) {
   var reason = 'ลูกค้าขอ bidding ใหม่';
   if (!approvals[ref]) approvals[ref] = {};
@@ -2158,7 +2158,7 @@ function reviseOffer(ref, mode) {
   if (banner) {
     banner.innerHTML = (mode === 'bidding'
         ? '<b>ต่อรองใหม่จากใบ ' + ref + ' (เคยอนุมัติแล้ว)</b>' +
-          '<div class="revise-reason">ลูกค้าขอ bidding ใหม่ — ใบเดิมถูกปิดเป็น "ออกใบใหม่แทน" แล้ว</div>'
+          '<div class="revise-reason">ลูกค้าขอ bidding ใหม่ — ใบเดิมถูกปิดเป็น "bidding" แล้ว</div>'
         : '<b>กำลังแก้ไขใบที่ถูกปฏิเสธ ' + ref + '</b>' +
           (reasons.length ? '<div class="revise-reason">' + reasons.join('<br>') + '</div>' : '')) +
       '<div class="revise-hint">ข้อมูลเดิมถูกกรอกไว้ให้แล้ว — แก้เฉพาะจุดที่ต้องปรับ แล้วกดส่งเพื่อออกใบใหม่</div>';
@@ -2772,6 +2772,12 @@ function enterRole(role) {
       v.parentNode.querySelector('.stat-sub').textContent = lbl[id][1];
     });
     loadData();
+  }
+  if (role === 'approve') {
+    // ผลการปิดการขายเป็นงานของทีมขาย — ดูได้ในหน้าเช็คสถานะ
+    ['filter-closed-won','filter-closed-lost'].forEach(function(id){
+      var b = document.getElementById(id); if (b) b.style.display = 'none';
+    });
   }
   if (window._statusMode) {
     curFilter = 'approved';
