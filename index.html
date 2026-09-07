@@ -880,6 +880,27 @@ body::before, body::after { display: none !important; }
 .frt-hint{margin-top:5px;font-size:12px;color:var(--ink-muted);font-style:italic}
 #approve-app .dv-unit{font-size:11px;font-weight:400;color:var(--ink-muted)}
 #approve-app .dv-sub{font-family:"Sarabun",sans-serif;font-size:11px;font-weight:400;color:var(--ink-muted);margin-top:2px}
+#setting-app{position:relative;z-index:1;min-height:100vh}
+.set-wrap{max-width:760px;margin:0 auto;padding:24px 24px 80px;display:flex;flex-direction:column;gap:16px}
+.set-card{background:var(--glass-strong);border:1px solid var(--glass-border);border-radius:var(--radius);box-shadow:var(--glass-shadow);padding:22px 24px}
+.set-title{font-family:"Kanit",sans-serif;font-size:16px;font-weight:600;color:var(--ink);margin-bottom:4px}
+.set-hint{font-size:12px;color:var(--ink-muted);margin-bottom:14px;line-height:1.6}
+.set-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.set-field label{display:block;font-size:11px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.set-field input{width:100%;padding:10px 14px;background:rgba(255,255,255,0.92);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:"Kanit",sans-serif;font-size:15px;font-weight:500;color:var(--ink)}
+.set-field input:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 3px rgba(166,61,95,.15)}
+.set-btn{display:inline-block;padding:10px 20px;border-radius:var(--radius-sm);border:1.5px solid var(--border-strong);background:rgba(255,255,255,0.9);font-family:"Kanit",sans-serif;font-size:13px;color:var(--ink-soft);cursor:pointer;text-decoration:none;transition:all .18s}
+.set-btn:hover{border-color:var(--orange);color:var(--orange);transform:translateY(-1px)}
+.set-btn.primary{background:linear-gradient(135deg,var(--orange),var(--orange-mid));border-color:transparent;color:#fff;box-shadow:0 4px 14px rgba(166,61,95,.3)}
+.set-btn.danger{border-color:#C0152A;color:#C0152A;margin-top:12px}
+.set-btn.danger:hover{background:#C0152A;color:#fff}
+.set-saved{margin-left:12px;font-size:13px;color:var(--green)}
+.set-links{display:flex;gap:10px;flex-wrap:wrap}
+.set-rows{display:flex;flex-direction:column}
+.set-row{display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--ink-soft)}
+.set-row:last-child{border-bottom:none}
+.set-row b{font-family:"Kanit",sans-serif;color:var(--ink)}
+@media(max-width:640px){.set-grid{grid-template-columns:1fr}}
 /* ── ROLE SELECT (หน้าแรก: เลือกโหมด) ── */
 .role-overlay{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#FBF7F5 0%,#F4EAED 50%,#EEE0E5 100%)}
 .role-card{background:var(--glass-strong);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--glass-border);border-radius:24px;box-shadow:var(--drop-shadow);padding:48px 44px;text-align:center;width:400px;max-width:92vw}
@@ -897,6 +918,7 @@ body::before, body::after { display: none !important; }
 .role-ic-approve{background:linear-gradient(135deg,#3C8A66,#1E7A4A);box-shadow:0 6px 16px rgba(30,122,74,.35)}
 .role-ic-status{background:linear-gradient(135deg,#5B7DB1,#3B5A8C);box-shadow:0 6px 16px rgba(91,125,177,.35)}
 .role-ic-summary{background:linear-gradient(135deg,#8A6BA8,#5F4478);box-shadow:0 6px 16px rgba(138,107,168,.35)}
+.role-ic-setting{background:linear-gradient(135deg,#6B7280,#374151);box-shadow:0 6px 16px rgba(55,65,81,.3)}
 .role-txt{flex:1}
 .role-arrow{font-size:20px;color:var(--ink-muted);transition:transform .2s,color .2s}
 .role-btn:hover .role-arrow{transform:translateX(5px);color:var(--orange)}
@@ -930,6 +952,11 @@ body::before, body::after { display: none !important; }
     <button class="role-btn" onclick="enterRole('summary')">
       <span class="role-ic role-ic-summary"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg></span>
       <span class="role-txt"><span class="role-t">สรุปยอดขาย — Summary</span><br><span class="role-d">สรุปการปิดการขายรายวัน ปริมาณและมูลค่ารวม</span></span>
+      <span class="role-arrow">→</span>
+    </button>
+    <button class="role-btn" onclick="enterRole('setting')">
+      <span class="role-ic role-ic-setting"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
+      <span class="role-txt"><span class="role-t">ตั้งค่า — Setting</span><br><span class="role-d">ค่าเริ่มต้นการคำนวณ ลิงก์ระบบ และข้อมูลในเครื่อง</span></span>
       <span class="role-arrow">→</span>
     </button>
     <div class="role-footer">SUNFOOD INTERNATIONAL</div>
@@ -1102,6 +1129,48 @@ body::before, body::after { display: none !important; }
 
 </div><!-- /offer-app -->
 
+<div id="setting-app" style="display:none">
+  <header class="site-header">
+    <div class="logo-text is-home" onclick="switchRole()" title="กลับหน้าหลัก">SUN<span>FOOD</span></div>
+    <div class="header-tag">SETTING</div>
+  </header>
+  <div class="set-wrap">
+    <div class="set-card">
+      <div class="set-title">ค่าเริ่มต้นของฟอร์ม</div>
+      <div class="set-hint">ค่าที่กรอกไว้จะถูกเติมให้อัตโนมัติทุกครั้งที่เพิ่มรายการสินค้าใหม่</div>
+      <div class="set-grid">
+        <div class="set-field"><label>ค่าเงิน (THB ต่อ USD)</label>
+          <input id="set-fx" type="text" inputmode="decimal" placeholder="เช่น 32.33"></div>
+        <div class="set-field"><label>ปริมาณต่อตู้ (MT)</label>
+          <input id="set-mtcont" type="text" inputmode="decimal" placeholder="เช่น 24"></div>
+      </div>
+      <button class="set-btn primary" onclick="saveSettings()">บันทึกค่าเริ่มต้น</button>
+      <span class="set-saved" id="set-saved"></span>
+    </div>
+
+    <div class="set-card">
+      <div class="set-title">ลิงก์ระบบ</div>
+      <div class="set-links">
+        <a class="set-btn" target="_blank" rel="noopener" href="https://docs.google.com/spreadsheets/d/15fxIAqk32f898h4nN-CG1HstFe3GPSy-33ALiJlJHwU/edit">เปิดชีท Offer</a>
+        <a class="set-btn" target="_blank" rel="noopener" href="https://docs.google.com/spreadsheets/d/1ZKrNVK1Mgffl1UqTGw8QxMld3hpTnlfZgpcgrwoNyHU/edit">เปิดชีท Approval</a>
+        <a class="set-btn" target="_blank" rel="noopener" href="https://github.com/nichasenapeng/Offer_price">โค้ดระบบ (GitHub)</a>
+      </div>
+    </div>
+
+    <div class="set-card">
+      <div class="set-title">ข้อมูลระบบ</div>
+      <div class="set-rows" id="set-info"></div>
+    </div>
+
+    <div class="set-card">
+      <div class="set-title">ข้อมูลในเครื่องนี้</div>
+      <div class="set-hint">ฟอร์มเก็บสำเนาใบเสนอราคาที่เคยส่งไว้ในเบราว์เซอร์ เผื่อไว้กู้ตอนส่งไม่สำเร็จ</div>
+      <div class="set-rows" id="set-local"></div>
+      <button class="set-btn danger" onclick="clearLocalCopies()">ล้างสำเนาในเครื่อง</button>
+    </div>
+  </div>
+</div>
+
 <div id="approve-app" style="display:none">
 
 
@@ -1176,6 +1245,11 @@ var completedTabs = {};
 var savedSessions = []; // เก็บข้อมูลแต่ละรอบของสินค้า
 var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyAfBG-BNJfw7y7MnbC6t4zC4Vckewu-VGQBBgSnEhAXqHEYRyFxjmKuvoLZxpM-Lw/exec';
 
+/* ค่าเริ่มต้นจากหน้าตั้งค่า — ประกาศไว้ต้นไฟล์เพราะ addProduct() ถูกเรียกตอนโหลด */
+function getSettings() {
+  try { return JSON.parse(localStorage.getItem('sf_settings') || '{}'); } catch (e) { return {}; }
+}
+
 /* ── TAB NAVIGATION ── */
 function showTab(n) {
   for (var i = 1; i <= 3; i++) {
@@ -1236,6 +1310,9 @@ function addProduct(data) {
   prodCount++;
   var id = prodCount;
   data = data || {};
+  var cfg = getSettings();   // เติมค่าเริ่มต้นจากหน้าตั้งค่า
+  if (!data.fx && cfg.fx) data.fx = cfg.fx;
+  if (!data.mtPerCont && cfg.mtPerCont) data.mtPerCont = cfg.mtPerCont;
   var div = document.createElement('div');
   div.className = 'prod-block';
   div.id = 'pb-' + id;
@@ -2846,15 +2923,57 @@ function showToast(msg, type) {
 renderCards();
 
 
+/* ── SETTING ── */
+function saveSettings() {
+  var cfg = {
+    fx: (document.getElementById('set-fx').value || '').trim(),
+    mtPerCont: (document.getElementById('set-mtcont').value || '').trim()
+  };
+  try { localStorage.setItem('sf_settings', JSON.stringify(cfg)); } catch (e) {}
+  var el = document.getElementById('set-saved');
+  el.textContent = 'บันทึกแล้ว';
+  setTimeout(function(){ el.textContent = ''; }, 2500);
+}
+function clearLocalCopies() {
+  if (!confirm('ล้างสำเนาใบเสนอราคาที่เก็บไว้ในเบราว์เซอร์นี้?\nข้อมูลในชีทไม่ถูกแตะต้อง')) return;
+  try { localStorage.removeItem('sf_requests'); } catch (e) {}
+  renderSettings();
+}
+function renderSettings() {
+  var cfg = getSettings();
+  document.getElementById('set-fx').value = cfg.fx || '';
+  document.getElementById('set-mtcont').value = cfg.mtPerCont || '';
+
+  var row = function(k, v){ return '<div class="set-row"><span>' + k + '</span><b>' + v + '</b></div>'; };
+  document.getElementById('set-info').innerHTML =
+    row('รหัสผ่านผู้อนุมัติ', PASS) +
+    row('ทีมขาย', document.querySelectorAll('#offer-app .user-btn').length + ' คน / ' +
+                  document.querySelectorAll('#offer-app .team-name').length + ' ทีม') +
+    row('โหมดใช้งาน', '5 โหมด (Offer · Approve · Status · Summary · Setting)') +
+    row('ที่อยู่เว็บ', location.host || 'local');
+
+  var n = 0, last = '—';
+  try {
+    var reqs = JSON.parse(localStorage.getItem('sf_requests') || '[]');
+    n = reqs.length;
+    if (n && reqs[0].submittedAt) last = new Date(reqs[0].submittedAt).toLocaleString('th-TH');
+  } catch (e) {}
+  document.getElementById('set-local').innerHTML =
+    row('สำเนาใบเสนอราคา', n + ' ใบ') + row('ส่งล่าสุด', last);
+}
+
 /* ── ROLE SWITCH ── */
 function enterRole(role) {
   document.getElementById('role-overlay').style.display = 'none';
   var useApproveApp = role === 'approve' || role === 'status' || role === 'summary';
+  var isSetting = role === 'setting';
   window._statusMode = role === 'status';
   window._summaryMode = role === 'summary';
   document.body.classList.toggle('mode-approve', useApproveApp);
   document.getElementById('approve-app').style.display = useApproveApp ? 'block' : 'none';
-  document.getElementById('offer-app').style.display = useApproveApp ? 'none' : 'block';
+  document.getElementById('setting-app').style.display = isSetting ? 'block' : 'none';
+  document.getElementById('offer-app').style.display = (useApproveApp || isSetting) ? 'none' : 'block';
+  if (isSetting) { renderSettings(); return; }
   if (window._summaryMode) {
     document.getElementById('ap-login-overlay').style.display = 'none';
     document.getElementById('hdr-user').textContent = 'สรุปยอดขาย';
