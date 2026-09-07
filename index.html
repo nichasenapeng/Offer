@@ -842,6 +842,18 @@ body::before, body::after { display: none !important; }
 .revise-hint{margin-top:8px;font-size:12px;color:var(--ink-muted)}
 #approve-app .btn-revise{background:rgba(246,235,239,0.9);color:var(--red-dark);border:1.5px solid var(--red)}
 #approve-app .btn-revise:hover{background:var(--red);color:#fff;transform:translateY(-1px);box-shadow:0 4px 14px rgba(166,61,95,.3)}
+#approve-app .nego-row{padding-bottom:14px;margin-bottom:14px;border-bottom:1px dashed var(--border-strong)}
+#approve-app .btn-nego{background:rgba(255,255,255,0.85);color:var(--ink-soft);border:1.5px solid var(--border-strong)}
+#approve-app .btn-nego:hover{background:var(--red);color:#fff;border-color:var(--red);transform:translateY(-1px)}
+#approve-app .ext-form{margin-top:12px;padding:14px;background:rgba(255,255,255,0.6);border:1px dashed var(--border-strong);border-radius:var(--radius-sm)}
+#approve-app .ext-note{margin-top:12px;padding:10px 14px;border-radius:var(--radius-sm);font-size:13px;line-height:1.6}
+#approve-app .ext-note.pending{background:rgba(254,249,231,0.85);border:1px solid #fde68a;color:#8a5a08}
+#approve-app .ext-note.ok{background:rgba(230,247,240,0.85);border:1px solid #a7f3d0;color:var(--green)}
+#approve-app .ext-note.no{background:rgba(246,235,239,0.85);border:1px solid var(--red);color:var(--red-dark)}
+#approve-app .ext-reason{margin-top:5px;font-size:12px;opacity:.85}
+#approve-app .ext-decide{flex:1 0 100%;width:100%;margin-bottom:16px;padding:14px 18px;background:rgba(254,249,231,0.7);border:1px solid #fde68a;border-left:4px solid #d99a2b;border-radius:var(--radius-sm)}
+#approve-app .ext-compare{font-size:14px;color:var(--ink);margin-top:4px}
+#approve-app .ext-compare b{font-family:"Kanit",sans-serif;color:var(--red-dark)}
 /* ── ROLE SELECT (หน้าแรก: เลือกโหมด) ── */
 .role-overlay{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#FBF7F5 0%,#F4EAED 50%,#EEE0E5 100%)}
 .role-card{background:var(--glass-strong);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--glass-border);border-radius:24px;box-shadow:var(--drop-shadow);padding:48px 44px;text-align:center;width:400px;max-width:92vw}
@@ -1115,6 +1127,8 @@ body::before, body::after { display: none !important; }
   <button class="filter-btn" id="filter-rejected" onclick="setFilter('rejected',this)">ปฏิเสธ</button>
   <button class="filter-btn" id="filter-closed-won" onclick="setFilter('closed-won',this)">ปิดการขายได้</button>
   <button class="filter-btn" id="filter-closed-lost" onclick="setFilter('closed-lost',this)">ไม่ปิดการขาย</button>
+  <button class="filter-btn" id="filter-superseded" onclick="setFilter('superseded',this)">ออกใบใหม่แทน</button>
+  <button class="filter-btn" id="filter-ext" onclick="setFilter('ext-pending',this)">ขอขยาย VALID</button>
 </div>
 
 <div class="section-heading">
@@ -1744,6 +1758,15 @@ function loadData() {
           approvals[d.ref].remarkA2 = d._sheetRemarkA2;
         if (!approvals[d.ref].close && d._sheetOverall) {
           var ov = d._sheetOverall.split('|');
+          if (ov[0].indexOf('ext-') === 0) {
+            approvals[d.ref].extState  = ov[0].slice(4);   // pending | approved | rejected
+            approvals[d.ref].extValid  = ov[1] || '';
+            approvals[d.ref].extReason = ov[2] || '';
+          }
+          if (ov[0] === 'superseded') {
+            approvals[d.ref].superseded = true;
+            approvals[d.ref].supersededReason = ov[1] || '';
+          }
           if (ov[0] === 'closed-won' || ov[0] === 'closed-lost') {
             approvals[d.ref].close = ov[0];
             if (ov.length >= 5) {
@@ -1991,6 +2014,7 @@ function setFilter(f, btn) {
 function getStatus(ref) {
   var a = approvals[ref] || {}; var v1 = a.A1; var v2 = a.A2;
   if (a.close) return a.close;
+  if (a.superseded) return 'superseded';
   if (!v1 && !v2) return 'pending';
   if (v1 === 'rejected' || v2 === 'rejected') return 'rejected';
   if (v1 === 'approved' && v2 === 'approved') return 'approved';
@@ -1999,7 +2023,7 @@ function getStatus(ref) {
 }
 
 function badge(status) {
-  var m = { pending:['badge-pending','รออนุมัติ'], approved:['badge-approved','อนุมัติครบ — รอปิดการขาย'], rejected:['badge-rejected','ปฏิเสธ'], partial:['badge-partial','Approve 1 แล้ว'], 'closed-won':['badge-approved','ปิดการขายได้'], 'closed-lost':['badge-lost','ไม่ปิดการขาย'] };
+  var m = { pending:['badge-pending','รออนุมัติ'], approved:['badge-approved','อนุมัติครบ — รอปิดการขาย'], rejected:['badge-rejected','ปฏิเสธ'], partial:['badge-partial','Approve 1 แล้ว'], 'closed-won':['badge-approved','ปิดการขายได้'], 'closed-lost':['badge-lost','ไม่ปิดการขาย'], 'superseded':['badge-partial','ออกใบใหม่แทน'] };
   var s = m[status] || m.pending;
   return '<span class="status-badge ' + s[0] + '">' + s[1] + '</span>';
 }
@@ -2026,8 +2050,46 @@ function postSaleState(ref, statusVal) {
   };
   fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) }).catch(function(){});
 }
+/* ── ลูกค้าขอขยาย VALID (ไม่ออกใบใหม่ — ให้ผู้อนุมัติยืนยันวันใหม่ในใบเดิม) ── */
+function toggleExtForm(ref) {
+  var el = document.getElementById('ext-form-' + ref);
+  if (el) el.style.display = (el.style.display === 'none' || !el.style.display) ? 'block' : 'none';
+}
+function submitExtRequest(ref) {
+  var v = document.getElementById('ext-valid-' + ref);
+  var r = document.getElementById('ext-reason-' + ref);
+  var newValid = v ? v.value.trim().replace(/\|/g, ' ') : '';
+  var reason   = r ? r.value.trim().replace(/\|/g, ' ') : '';
+  if (!newValid) { showToast('กรุณากรอก VALID ใหม่ที่ลูกค้าขอ', 'red'); if (v) v.focus(); return; }
+  if (!approvals[ref]) approvals[ref] = {};
+  approvals[ref].extState = 'pending';
+  approvals[ref].extValid = newValid;
+  approvals[ref].extReason = reason;
+  postSaleState(ref, 'ext-pending|' + newValid + '|' + reason);
+  showToast('ส่งคำขอขยาย VALID ให้ผู้อนุมัติแล้ว', 'green');
+  renderCards();
+}
+function decideExtension(ref, ok) {
+  if (!approvals[ref]) approvals[ref] = {};
+  var a = approvals[ref];
+  a.extState = ok ? 'approved' : 'rejected';
+  postSaleState(ref, 'ext-' + a.extState + '|' + (a.extValid || '') + '|' + (a.extReason || ''));
+  showToast(ok ? 'ยืนยันขยาย VALID ถึง ' + a.extValid : 'ไม่อนุมัติการขยาย VALID', ok ? 'green' : 'red');
+  renderCards();
+}
+
+/* ── ลูกค้าขอ bidding → ออกใบใหม่ แล้วปิดใบเดิมเป็น "ออกใบใหม่แทน" ── */
+function requestBidding(ref) {
+  var reason = 'ลูกค้าขอ bidding ใหม่';
+  if (!approvals[ref]) approvals[ref] = {};
+  approvals[ref].superseded = true;
+  approvals[ref].supersededReason = reason;
+  postSaleState(ref, 'superseded|' + reason);
+  reviseOffer(ref, 'bidding');
+}
+
 /* ── แก้ไขใบที่ถูกปฏิเสธแล้วส่งใหม่ ── */
-function reviseOffer(ref) {
+function reviseOffer(ref, mode) {
   var d = DATA.filter(function(x){ return x.ref === ref; })[0];
   if (!d) { showToast('ไม่พบข้อมูลใบเสนอราคานี้', 'red'); return; }
   var av = approvals[ref] || {};
@@ -2068,15 +2130,20 @@ function reviseOffer(ref) {
     });
   });
 
-  var note = 'แก้ไขจาก ' + ref + (reasons.length ? ' — เหตุผลที่ถูกปฏิเสธ: ' + reasons.join(' / ') : '');
+  var note = (mode === 'bidding')
+    ? 'ต่อรองจาก ' + ref + ' (เคยอนุมัติแล้ว) — ลูกค้าขอ bidding ใหม่'
+    : 'แก้ไขจาก ' + ref + (reasons.length ? ' — เหตุผลที่ถูกปฏิเสธ: ' + reasons.join(' / ') : '');
   var rem = document.getElementById('t-remark');
   if (rem) rem.value = note + (d.remark ? '\n' + d.remark : '');
   window._reviseFrom = ref;
 
   var banner = document.getElementById('revise-banner');
   if (banner) {
-    banner.innerHTML = '<b>กำลังแก้ไขใบที่ถูกปฏิเสธ ' + ref + '</b>' +
-      (reasons.length ? '<div class="revise-reason">' + reasons.join('<br>') + '</div>' : '') +
+    banner.innerHTML = (mode === 'bidding'
+        ? '<b>ต่อรองใหม่จากใบ ' + ref + ' (เคยอนุมัติแล้ว)</b>' +
+          '<div class="revise-reason">ลูกค้าขอ bidding ใหม่ — ใบเดิมถูกปิดเป็น "ออกใบใหม่แทน" แล้ว</div>'
+        : '<b>กำลังแก้ไขใบที่ถูกปฏิเสธ ' + ref + '</b>' +
+          (reasons.length ? '<div class="revise-reason">' + reasons.join('<br>') + '</div>' : '')) +
       '<div class="revise-hint">ข้อมูลเดิมถูกกรอกไว้ให้แล้ว — แก้เฉพาะจุดที่ต้องปรับ แล้วกดส่งเพื่อออกใบใหม่</div>';
     banner.style.display = 'block';
   }
@@ -2253,10 +2320,12 @@ function renderCards() {
     // โหมดเช็คสถานะ: เห็นเฉพาะใบที่ผู้อนุมัติตัดสินแล้ว (อนุมัติครบ / ปิดการขาย / ถูกปฏิเสธ)
     data = DATA.filter(function(d) {
       var st = getStatus(d.ref);
-      return st === 'approved' || st === 'closed-won' || st === 'closed-lost' || st === 'rejected';
+      return st === 'approved' || st === 'closed-won' || st === 'closed-lost' || st === 'rejected' || st === 'superseded';
     });
   }
-  var filt = data.filter(function(d){ return getStatus(d.ref) === curFilter; });
+  var filt = (curFilter === 'ext-pending')
+    ? data.filter(function(d){ var a = approvals[d.ref] || {}; return a.extState === 'pending' && getStatus(d.ref) === 'approved'; })
+    : data.filter(function(d){ return getStatus(d.ref) === curFilter; });
 
   var cnt = function(st){ return data.filter(function(d){ return getStatus(d.ref) === st; }).length; };
   document.getElementById('st-total').textContent = data.length;
@@ -2347,7 +2416,21 @@ function renderCards() {
         '</div>';
       }
 
+      var extDecide = '';
+      if (av.extState === 'pending') {
+        extDecide = '<div class="ext-decide">' +
+          '<div class="slot-label">คำขอขยาย VALID จากทีมขาย</div>' +
+          '<div class="ext-compare">ยืนราคาเดิม: <b>' + (d.valid || '—') + '</b> &nbsp;→&nbsp; ขอขยายเป็น: <b>' + av.extValid + '</b></div>' +
+          (av.extReason ? '<div class="ext-reason">' + av.extReason + '</div>' : '') +
+          '<div class="vote-buttons" style="margin-top:10px">' +
+            '<button class="vote-btn btn-approve" onclick="decideExtension(\'' + d.ref + '\',true)">ยืนยันวันใหม่</button>' +
+            '<button class="vote-btn btn-reject" onclick="decideExtension(\'' + d.ref + '\',false)">ไม่อนุมัติ</button>' +
+          '</div></div>';
+      } else if (av.extState === 'approved') {
+        extDecide = '<div class="ext-note ok"><b>ขยาย VALID แล้ว</b> — ยืนราคาถึง <b>' + av.extValid + '</b></div>';
+      }
       approveHtml = '<div class="approve-section">' +
+        extDecide +
         '<div class="approve-slots">' +
           slotHtml('A1', dec1) +
           '<div class="slot-divider"></div>' +
@@ -2400,7 +2483,38 @@ function renderCards() {
           '<button class="btn-undo" onclick="undoClose(\'' + d.ref + '\')">แก้ไข</button></div>' +
           (av.closeRemark ? '<div class="close-remark-note"><b>Remark:</b> ' + av.closeRemark + '</div>' : '');
       }
+      var negotiate = '';
+      if (status === 'approved') {
+        var extBox = '';
+        if (av.extState === 'pending') {
+          extBox = '<div class="ext-note pending"><b>รอผู้อนุมัติยืนยัน</b> — ขอขยาย VALID เป็น <b>' + av.extValid + '</b>' +
+            (av.extReason ? '<div class="ext-reason">' + av.extReason + '</div>' : '') + '</div>';
+        } else if (av.extState === 'approved') {
+          extBox = '<div class="ext-note ok"><b>ผู้อนุมัติยืนยันขยาย VALID แล้ว</b> — ยืนราคาถึง <b>' + av.extValid + '</b></div>';
+        } else if (av.extState === 'rejected') {
+          extBox = '<div class="ext-note no"><b>ผู้อนุมัติไม่อนุมัติการขยาย VALID</b> — ยังยืนตามกำหนดเดิม</div>';
+        }
+        negotiate =
+          '<div class="nego-row">' +
+            '<div class="slot-label">ลูกค้าขอต่อรอง</div>' +
+            '<div class="vote-buttons">' +
+              '<button class="vote-btn btn-nego" onclick="toggleExtForm(\'' + d.ref + '\')">ขอขยาย VALID</button>' +
+              '<button class="vote-btn btn-nego" onclick="requestBidding(\'' + d.ref + '\')">ลูกค้าขอ bidding</button>' +
+            '</div>' +
+            '<div class="ext-form" id="ext-form-' + d.ref + '" style="display:none">' +
+              '<div class="close-grid" style="grid-template-columns:1fr 2fr">' +
+                '<div class="close-field"><label>VALID ใหม่ที่ลูกค้าขอ</label>' +
+                  '<input id="ext-valid-' + d.ref + '" class="close-input" type="text" placeholder="' + (d.valid ? 'เดิม ' + d.valid : 'เช่น ถึง 30/09/2026') + '" value="' + (av.extValid || '') + '"></div>' +
+                '<div class="close-field"><label>เหตุผล / รายละเอียด</label>' +
+                  '<input id="ext-reason-' + d.ref + '" class="close-input" type="text" placeholder="เช่น ลูกค้ารออนุมัติงบภายในสิ้นเดือน" value="' + (av.extReason || '') + '"></div>' +
+              '</div>' +
+              '<button class="vote-btn btn-approve" style="margin-top:10px" onclick="submitExtRequest(\'' + d.ref + '\')">ส่งคำขอให้ผู้อนุมัติ</button>' +
+            '</div>' +
+            extBox +
+          '</div>';
+      }
       approveHtml = '<div class="approve-section"><div class="vote-slot-wrap" style="padding-left:0">' +
+        negotiate +
         '<div class="slot-label">ผลการขาย (หลังอนุมัติ)</div>' + closeInner + '</div></div>';
     }
 
