@@ -791,6 +791,10 @@ input[type="number"]::-webkit-inner-spin-button { display: none; }
 .stripe-closed-lost{background:linear-gradient(90deg,#9ca3af,#6b7280)}
 #approve-app .offer-card.status-closed-won{border-left:5px solid var(--green)}
 #approve-app .offer-card.status-closed-lost{border-left:5px solid #9ca3af}
+#approve-app .close-row{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
+#approve-app .close-price-wrap label{display:block;font-size:10px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+#approve-app .close-price-input{width:190px;padding:9px 14px;background:rgba(255,255,255,0.9);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:"Kanit",sans-serif;font-size:15px;font-weight:600;color:var(--ink);transition:border-color .2s,box-shadow .2s}
+#approve-app .close-price-input:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(236,72,153,.15)}
 /* ── ROLE SELECT (หน้าแรก: เลือกโหมด) ── */
 .role-overlay{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#FFE4F1 0%,#FFC8E1 50%,#FFA8CE 100%)}
 .role-card{background:var(--glass-strong);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--glass-border);border-radius:24px;box-shadow:var(--drop-shadow);padding:48px 44px;text-align:center;width:400px;max-width:92vw}
@@ -1579,8 +1583,13 @@ function loadData() {
           approvals[d.ref].remarkA1 = d._sheetRemarkA1;
         if (!approvals[d.ref].remarkA2 && d._sheetRemarkA2)
           approvals[d.ref].remarkA2 = d._sheetRemarkA2;
-        if (!approvals[d.ref].close && (d._sheetOverall === 'closed-won' || d._sheetOverall === 'closed-lost'))
-          approvals[d.ref].close = d._sheetOverall;
+        if (!approvals[d.ref].close && d._sheetOverall) {
+          var ov = d._sheetOverall.split('|');
+          if (ov[0] === 'closed-won' || ov[0] === 'closed-lost') {
+            approvals[d.ref].close = ov[0];
+            if (ov[1]) approvals[d.ref].closePrice = ov[1];
+          }
+        }
       });
 
       document.getElementById('last-updated').textContent = 'อัปเดต: ' + new Date().toLocaleTimeString('th-TH');
@@ -1852,13 +1861,21 @@ function postSaleState(ref, statusVal) {
 }
 function closeSale(ref, result) {
   if (!approvals[ref]) approvals[ref] = {};
+  var price = '';
+  if (result === 'closed-won') {
+    var el = document.getElementById('close-price-' + ref);
+    price = el ? el.value.trim() : '';
+    if (!price) { showToast('กรุณากรอกยอดที่ปิดได้ก่อน', 'red'); if (el) el.focus(); return; }
+    price = price.replace(/\|/g, '');
+  }
   approvals[ref].close = result;
-  postSaleState(ref, result);
-  showToast(result === 'closed-won' ? 'บันทึกแล้ว: ปิดการขายได้' : 'บันทึกแล้ว: ไม่ปิดการขาย', result === 'closed-won' ? 'green' : 'red');
+  approvals[ref].closePrice = price;
+  postSaleState(ref, price ? result + '|' + price : result);
+  showToast(result === 'closed-won' ? 'บันทึกแล้ว: ปิดการขายได้ ' + price : 'บันทึกแล้ว: ไม่ปิดการขาย', result === 'closed-won' ? 'green' : 'red');
   renderCards();
 }
 function undoClose(ref) {
-  if (approvals[ref]) delete approvals[ref].close;
+  if (approvals[ref]) { delete approvals[ref].close; delete approvals[ref].closePrice; }
   postSaleState(ref, 'approved');
   showToast('ยกเลิกผลการขายแล้ว — กลับเป็นรอปิดการขาย');
   renderCards();
@@ -1925,12 +1942,26 @@ function saveRemarks() {
 function renderCards() {
   saveRemarks();
   var data = DATA;
+  if (window._statusMode) {
+    // โหมดเช็คสถานะ: เห็นเฉพาะ offer ที่อนุมัติครบแล้วเท่านั้น
+    data = DATA.filter(function(d) {
+      var st = getStatus(d.ref);
+      return st === 'approved' || st === 'closed-won' || st === 'closed-lost';
+    });
+  }
   var filt = data.filter(function(d){ return getStatus(d.ref) === curFilter; });
 
+  var cnt = function(st){ return data.filter(function(d){ return getStatus(d.ref) === st; }).length; };
   document.getElementById('st-total').textContent = data.length;
-  document.getElementById('st-pend').textContent  = data.filter(function(d){ return getStatus(d.ref) === 'pending'; }).length;
-  document.getElementById('st-appr').textContent  = data.filter(function(d){ return getStatus(d.ref) === 'approved'; }).length;
-  document.getElementById('st-rej').textContent   = data.filter(function(d){ return getStatus(d.ref) === 'rejected'; }).length;
+  if (window._statusMode) {
+    document.getElementById('st-pend').textContent = cnt('approved');
+    document.getElementById('st-appr').textContent = cnt('closed-won');
+    document.getElementById('st-rej').textContent  = cnt('closed-lost');
+  } else {
+    document.getElementById('st-pend').textContent = cnt('pending');
+    document.getElementById('st-appr').textContent = cnt('approved');
+    document.getElementById('st-rej').textContent  = cnt('rejected');
+  }
   document.getElementById('sec-count').textContent = 'แสดง ' + filt.length + ' จาก ' + data.length + ' รายการ';
 
   var c = document.getElementById('cards');
@@ -2017,13 +2048,16 @@ function renderCards() {
     if (window._statusMode && (status === 'approved' || status === 'closed-won' || status === 'closed-lost')) {
       var closeInner;
       if (status === 'approved') {
-        closeInner = '<div class="vote-buttons">' +
-          '<button class="vote-btn btn-approve" onclick="closeSale(\'' + d.ref + '\',\'closed-won\')">ปิดการขายได้</button>' +
-          '<button class="vote-btn btn-reject" onclick="closeSale(\'' + d.ref + '\',\'closed-lost\')">ไม่ปิดการขาย</button>' +
-        '</div>';
+        closeInner = '<div class="close-row">' +
+          '<div class="close-price-wrap"><label>ยอดที่ปิดได้ (USD/MT)</label>' +
+          '<input id="close-price-' + d.ref + '" class="close-price-input" type="text" placeholder="เช่น ' + (d.offerPrice || '3,900') + '" value="' + (av.closePrice || '') + '"></div>' +
+          '<div class="vote-buttons">' +
+            '<button class="vote-btn btn-approve" onclick="closeSale(\'' + d.ref + '\',\'closed-won\')">ปิดการขายได้</button>' +
+            '<button class="vote-btn btn-reject" onclick="closeSale(\'' + d.ref + '\',\'closed-lost\')">ไม่ปิดการขาย</button>' +
+          '</div></div>';
       } else {
         closeInner = '<div class="vote-result ' + (status === 'closed-won' ? 'approved' : 'rejected') + '">' +
-          (status === 'closed-won' ? 'ปิดการขายได้' : 'ไม่ปิดการขาย') +
+          (status === 'closed-won' ? 'ปิดการขายได้' + (av.closePrice ? ' ที่ ' + av.closePrice + ' USD/MT' : '') : 'ไม่ปิดการขาย') +
           '<button class="btn-undo" onclick="undoClose(\'' + d.ref + '\')">แก้ไข</button></div>';
       }
       approveHtml = '<div class="approve-section"><div class="vote-slot-wrap" style="padding-left:0">' +
@@ -2085,7 +2119,24 @@ function enterRole(role) {
   if (window._statusMode) {
     curFilter = 'approved';
     document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
-    var fb = document.getElementById('filter-approved'); if (fb) fb.classList.add('active');
+    ['filter-pending','filter-partial','filter-rejected'].forEach(function(id){
+      var b = document.getElementById(id); if (b) b.style.display = 'none';
+    });
+    var fb = document.getElementById('filter-approved');
+    if (fb) { fb.classList.add('active'); fb.textContent = 'รอปิดการขาย'; }
+    var st = {'st-pend':['รอปิดการขาย','Awaiting close'], 'st-appr':['ปิดการขายได้','Closed Won'], 'st-rej':['ไม่ปิดการขาย','Closed Lost']};
+    Object.keys(st).forEach(function(id){
+      var v = document.getElementById(id); if (!v) return;
+      var box = v.parentNode;
+      box.querySelector('.stat-label').textContent = st[id][0];
+      box.querySelector('.stat-sub').textContent = st[id][1];
+    });
+    var tot = document.getElementById('st-total');
+    if (tot) { tot.parentNode.querySelector('.stat-label').textContent = 'อนุมัติครบทั้งหมด'; tot.parentNode.querySelector('.stat-sub').textContent = 'Approved Offers'; }
+    var hd = document.querySelector('#approve-app .section-heading h2');
+    if (hd) hd.textContent = 'ติดตามผลการขาย (หลังอนุมัติ)';
+    var sub = document.querySelector('#approve-app .hdr-sub');
+    if (sub) sub.textContent = 'Sales Status Tracker';
     document.getElementById('ap-login-overlay').style.display = 'none';
     document.getElementById('hdr-user').textContent = 'ดูสถานะ (อ่านอย่างเดียว)';
     var lo = document.querySelector('#approve-app .btn-logout');
