@@ -8,7 +8,7 @@
 <style>
 :root {
   --orange: #A63D5F; --orange-light: rgba(246,235,239, 0.55); --orange-mid: #7E2C48;
-  --ink: #1A1714; --ink-soft: #46403A; --ink-muted: #8C8580;
+  --ink: #1A1714; --ink-soft: #46403A; --ink-muted: #6B6560;
   --bg-1: #FBF7F5; --bg-2: #F4EAED; --bg-3: #E9D5DC; --bg-4: #DFC6CF;
   --white: rgba(255, 255, 255, 0.92);
   --glass: rgba(255, 255, 255, 0.86);
@@ -648,7 +648,7 @@ body::before, body::after { display: none !important; }
 
 /* remark */
 .remark-row{margin:0 20px 14px;font-size:12px;color:var(--ink-soft);
-  background:rgba(255,255,255,0.45);border-left:3px solid var(--border);padding:8px 12px;border-radius:0 6px 6px 0}
+  background:rgba(255,255,255,0.55);border:1px solid var(--border);padding:8px 12px;border-radius:var(--radius-sm)}
 
 /* approve section */
 .approve-section{
@@ -707,7 +707,7 @@ body::before, body::after { display: none !important; }
 
 /* toast */
 .toast{
-  position:fixed;bottom:24px;right:24px;z-index:999;
+  position:fixed;bottom:24px;right:24px;z-index:var(--z-toast);
   padding:12px 22px;border-radius:var(--radius-sm);
   font-family:"Kanit",sans-serif;font-size:14px;color:#fff;
   background:var(--ink);box-shadow:0 8px 24px rgba(0,0,0,.22);
@@ -746,7 +746,7 @@ body::before, body::after { display: none !important; }
 #approve-app .summary-bar, #approve-app .filter-bar { background: rgba(255,255,255,0.35); }
 
 /* อ่านง่ายขึ้น: การ์ดทึบขึ้น ตัวหนังสือเข้ม/ใหญ่ขึ้น */
-#approve-app{--white:rgba(255,255,255,0.85);--off-white:rgba(255,255,255,0.65);--ink-muted:#6B6560}
+#approve-app{--white:rgba(255,255,255,0.85);--off-white:rgba(255,255,255,0.65)}
 #approve-app .summary-bar,#approve-app .filter-bar{background:rgba(255,255,255,0.6)}
 #approve-app .dl{font-size:11px}
 #approve-app .dv{font-size:16px}
@@ -810,11 +810,11 @@ body::before, body::after { display: none !important; }
 
 #approve-app .close-date-wrap{margin-bottom:14px}
 #approve-app .rej-reasons{margin-top:10px;display:flex;flex-direction:column;gap:8px}
-#approve-app .rej-reason{font-size:13px;color:var(--ink-soft);background:rgba(255,255,255,0.6);border-left:3px solid var(--red);border-radius:0 6px 6px 0;padding:9px 13px}
+#approve-app .rej-reason{font-size:13px;color:var(--ink-soft);background:rgba(246,235,239,0.85);border:1px solid var(--red);border-radius:var(--radius-sm);padding:9px 13px}
 #approve-app .rej-reason span{display:block;font-size:10px;font-weight:600;color:var(--red);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
 #approve-app .close-remark-wrap{margin-top:12px}
 #approve-app .close-remark{width:100%;font-weight:400;font-size:13px;font-family:"Sarabun",sans-serif;resize:vertical;line-height:1.5}
-#approve-app .close-remark-note{margin-top:10px;font-size:13px;color:var(--ink-soft);background:rgba(255,255,255,0.55);border-left:3px solid var(--border-strong);border-radius:0 6px 6px 0;padding:8px 12px}
+#approve-app .close-remark-note{margin-top:10px;font-size:13px;color:var(--ink-soft);background:rgba(255,255,255,0.6);border:1px solid var(--border-strong);border-radius:var(--radius-sm);padding:8px 12px}
 @media(max-width:768px){#approve-app .close-grid{grid-template-columns:1fr 1fr}}
 /* skeleton loader */
 @keyframes skShimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}
@@ -840,7 +840,7 @@ body::before, body::after { display: none !important; }
   #offer-app .g2, #offer-app .g3 { grid-template-columns: 1fr; }
   .site-header { padding: 0 14px; }
 }
-.revise-banner{background:rgba(255,255,255,0.9);border:1px solid var(--red);border-left:4px solid var(--red);border-radius:var(--radius-sm);padding:14px 18px;margin-bottom:16px;font-size:14px;color:var(--ink);box-shadow:0 4px 16px rgba(166,61,95,.12)}
+.revise-banner{background:rgba(255,255,255,0.9);border:1.5px solid var(--red);border-radius:var(--radius-sm);padding:14px 18px;margin-bottom:16px;font-size:14px;color:var(--ink);box-shadow:0 4px 16px rgba(166,61,95,.12)}
 .revise-reason{margin-top:7px;font-size:13px;color:var(--red-dark);background:rgba(246,235,239,0.8);border-radius:6px;padding:8px 12px;line-height:1.55}
 .revise-hint{margin-top:8px;font-size:12px;color:var(--ink-muted)}
 #approve-app .btn-revise{background:rgba(246,235,239,0.9);color:var(--red-dark);border:1.5px solid var(--red)}
@@ -854,11 +854,11 @@ body::before, body::after { display: none !important; }
 #approve-app .ext-note.ok{background:rgba(230,247,240,0.85);border:1px solid #a7f3d0;color:var(--green)}
 #approve-app .ext-note.no{background:rgba(246,235,239,0.85);border:1px solid var(--red);color:var(--red-dark)}
 #approve-app .ext-reason{margin-top:5px;font-size:12px;opacity:.85}
-#approve-app .ext-decide{flex:1 0 100%;width:100%;margin-bottom:16px;padding:14px 18px;background:rgba(254,249,231,0.7);border:1px solid #fde68a;border-left:4px solid #d99a2b;border-radius:var(--radius-sm)}
+#approve-app .ext-decide{flex:1 0 100%;width:100%;margin-bottom:16px;padding:14px 18px;background:rgba(254,249,231,0.7);border:1.5px solid #d99a2b;border-radius:var(--radius-sm)}
 #approve-app .ext-compare{font-size:14px;color:var(--ink);margin-top:4px}
 #approve-app .ext-compare b{font-family:"Kanit",sans-serif;color:var(--red-dark)}
 #approve-app .filter-btn.has-pending{background:#FEF3C7;border-color:#d99a2b;color:#8a5a08;font-weight:600}
-#approve-app .filter-btn.has-pending.active{background:#d99a2b;border-color:#d99a2b;color:#fff}
+#approve-app .filter-btn.has-pending.active{background:#8a5a08;border-color:#8a5a08;color:#fff}
 #approve-app .filter-btn{position:relative;overflow:visible}
 #approve-app .filter-badge{
   position:absolute;top:-8px;right:-7px;min-width:20px;height:20px;padding:0 6px;
@@ -926,8 +926,64 @@ body::before, body::after { display: none !important; }
 /* ปุ่ม Approve / Reject กว้างเท่ากัน */
 #approve-app .vote-buttons{display:flex;gap:10px}
 #approve-app .vote-btn{flex:1 1 0;min-width:0;justify-content:center;text-align:center}
+/* header บนมือถือ: ห่อบรรทัดแทนดันเนื้อหาออกนอกจอ */
+@media (max-width:768px){
+  #approve-app .ap-site-header{
+    height:auto;min-height:54px;padding:8px 14px;
+    flex-wrap:wrap;gap:8px 10px;
+  }
+  #approve-app .hdr-left{flex:1 1 100%;gap:10px}
+  #approve-app .hdr-right{flex:1 1 100%;justify-content:flex-start;flex-wrap:wrap;gap:8px}
+  #approve-app .hdr-sub{font-size:10px}
+  #approve-app .notif-pill{order:-1}
+  #approve-app #last-updated{display:none}
+  #approve-app .summary-bar{grid-template-columns:1fr 1fr;padding:14px}
+  #approve-app .filter-bar{padding:10px 14px}
+  #approve-app .main{padding:4px 14px 80px}
+  #approve-app .prod-table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
+}
+
+/* ══════════ AUDIT FIXES: motion · focus · z-index · touch ══════════ */
+
+/* ลำดับชั้นแบบมีความหมาย แทนเลขสุ่ม (999/1000) */
+:root{
+  --z-base:1; --z-sticky:100; --z-overlay:700; --z-modal:800; --z-toast:900;
+}
+.ap-login-overlay{z-index:var(--z-overlay)}
+.login-overlay{z-index:var(--z-modal)}
+.success-overlay{z-index:var(--z-modal)}
+
+/* คีย์บอร์ดต้องเห็นว่าโฟกัสอยู่ตรงไหน */
+a:focus-visible, button:focus-visible, input:focus-visible,
+select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible{
+  outline:2px solid var(--orange);
+  outline-offset:2px;
+  border-radius:6px;
+}
+
+/* นิ้วกดได้จริงบนมือถือ */
+@media (max-width:768px){
+  button, .vote-btn, .filter-btn, .set-btn, .quick-btn, .link-copy, .btn-undo{
+    min-height:44px;
+  }
+  .btn-rm{min-width:44px;min-height:44px}
+}
+
+/* เคารพการตั้งค่าลดการเคลื่อนไหวของผู้ใช้ */
+@media (prefers-reduced-motion:reduce){
+  *, *::before, *::after{
+    animation-duration:0.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:0.01ms !important;
+    scroll-behavior:auto !important;
+  }
+  #approve-app .offer-card{animation:none;opacity:1}
+  #approve-app .notif-dot{animation:none;opacity:1}
+  .sk-line::after, .sk-block::after{animation:none}
+}
+
 /* ── ROLE SELECT (หน้าแรก: เลือกโหมด) ── */
-.role-overlay{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(135deg,#FBF7F5 0%,#F4EAED 50%,#EEE0E5 100%);overflow:auto}
+.role-overlay{position:fixed;inset:0;z-index:var(--z-modal);display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(135deg,#FBF7F5 0%,#F4EAED 50%,#EEE0E5 100%);overflow:auto}
 .role-card{background:var(--glass-strong);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--glass-border);border-radius:24px;box-shadow:var(--drop-shadow);padding:44px 40px 34px;text-align:center;width:640px;max-width:100%}
 .role-logo{font-family:"Kanit",sans-serif;font-size:32px;font-weight:700;letter-spacing:.14em;color:var(--ink)}
 .role-logo span{color:var(--orange)}
@@ -1038,12 +1094,12 @@ body::before, body::after { display: none !important; }
 </header>
 
 <div class="hero">
-  <div class="hero-tag">&#127828; EXPORT SALES TEAM</div>
+  <div class="hero-tag">EXPORT SALES TEAM</div>
   <h1>ปรึกษาเสนอราคา</h1>
 </div>
 
 <!-- TAB BAR -->
-<div class="wizard-wrap">
+<div class="wizard-wrap" role="main">
   <div class="revise-banner" id="revise-banner" style="display:none"></div>
   <div class="tab-bar">
     <div class="tab-item active" id="ti-1">
@@ -1074,11 +1130,11 @@ body::before, body::after { display: none !important; }
         </div>
       </div>
       <div class="field" style="margin-bottom:14px">
-        <label>ชื่อบริษัท / Company Name <span class="req">*</span></label>
+        <label for="c-company">ชื่อบริษัท / Company Name <span class="req">*</span></label>
         <input id="c-company" type="text" placeholder="">
       </div>
       <div class="field" style="margin-bottom:14px">
-        <label>ท่าเรือปลายทาง / Destination Port <span class="req">*</span></label>
+        <label for="c-port">ท่าเรือปลายทาง / Destination Port <span class="req">*</span></label>
         <input id="c-port" type="text" list="port-list" autocomplete="off"
           placeholder="เลือกจากรายการ หรือพิมพ์เอง เช่น Busan, South Korea" oninput="onPortChange()">
         <datalist id="port-list"></datalist>
@@ -1086,15 +1142,15 @@ body::before, body::after { display: none !important; }
       </div>
       <div class="g3">
         <div class="field">
-          <label>Incoterm</label>
+          <label for="t-incoterm">Incoterm</label>
           <input id="t-incoterm" type="text" placeholder="เช่น CFR, CIF, FOB">
         </div>
         <div class="field">
-          <label>Payment Term</label>
+          <label for="t-payment">Payment Term</label>
           <input id="t-payment" type="text" placeholder="เช่น LC at Sight, TT 30 days">
         </div>
         <div class="field">
-          <label>ประเภทออเดอร์</label>
+          <label for="t-order-type">ประเภทออเดอร์</label>
           <select id="t-order-type">
             <option>ออเดอร์ต่อเนื่อง</option><option>ออเดอร์ครั้งเดียว</option><option>ทดลองสั่ง</option>
           </select>
@@ -1143,7 +1199,7 @@ body::before, body::after { display: none !important; }
       <div id="summary-container" style="margin-bottom:14px"></div>
       <div class="divider"></div>
       <div class="field">
-        <label>หมายเหตุรวม / Additional Requirements</label>
+        <label for="t-remark">หมายเหตุรวม / Additional Requirements</label>
         <textarea id="t-remark" placeholder="เช่น ต้องการ Herb Fed, ขนาดพิเศษ, เงื่อนไขพิเศษ..."></textarea>
       </div>
     </div>
@@ -1178,9 +1234,9 @@ body::before, body::after { display: none !important; }
       <div class="set-title">ค่าเริ่มต้นของฟอร์ม</div>
       <div class="set-hint">ค่าที่กรอกไว้จะถูกเติมให้อัตโนมัติทุกครั้งที่เพิ่มรายการสินค้าใหม่</div>
       <div class="set-grid">
-        <div class="set-field"><label>ค่าเงิน (THB ต่อ USD)</label>
+        <div class="set-field"><label for="set-fx">ค่าเงิน (THB ต่อ USD)</label>
           <input id="set-fx" type="text" inputmode="decimal" placeholder="เช่น 32.33"></div>
-        <div class="set-field"><label>ปริมาณต่อตู้ (MT)</label>
+        <div class="set-field"><label for="set-mtcont">ปริมาณต่อตู้ (MT)</label>
           <input id="set-mtcont" type="text" inputmode="decimal" placeholder="เช่น 24"></div>
       </div>
       <button class="set-btn primary" onclick="saveSettings()">บันทึกค่าเริ่มต้น</button>
@@ -1191,7 +1247,7 @@ body::before, body::after { display: none !important; }
       <div class="set-title">ค่าเฟรทรายเดือน (แยกตาม Port)</div>
       <div class="set-hint">ระบบจะดึงค่าเฟรทมาใส่ให้อัตโนมัติ เมื่อท่าเรือปลายทางในใบเสนอราคาตรงกับรายการด้านล่าง</div>
       <div class="set-field" style="max-width:220px;margin-bottom:14px">
-        <label>เดือนของราคานี้</label>
+        <label for="frt-month">เดือนของราคานี้</label>
         <input id="frt-month" type="text" placeholder="เช่น 9/2026">
       </div>
       <div class="frt-table" id="frt-table"></div>
@@ -1279,8 +1335,8 @@ body::before, body::after { display: none !important; }
   <span class="section-count" id="sec-count">—</span>
 </div>
 
-<div class="main" id="cards"></div>
-<div class="toast" id="toast"></div>
+<main class="main" id="cards" aria-live="polite"></main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 
 </div>
@@ -1450,7 +1506,7 @@ function addProduct(data) {
   div.innerHTML =
     '<div class="prod-header">' +
       '<span class="prod-label"><span class="prod-dot"></span>รายการที่ ' + id + '</span>' +
-      '<button class="btn-rm" data-rmid="' + id + '" title="ลบ">&#215;</button>' +
+      '<button class="btn-rm" data-rmid="' + id + '" title="ลบรายการนี้" aria-label="ลบรายการที่ ' + id + '">&#215;</button>' +
     '</div>' +
 
     /* ── Inquiry ── */
@@ -2625,7 +2681,7 @@ function vote(ref, slot, dec) {
 
 function undoVote(ref, slot) {
   if (approvals[ref]) delete approvals[ref][slot];
-  showToast('↩ ยกเลิก ' + slot + ' แล้ว');
+  showToast('ยกเลิก ' + slot + ' แล้ว');
   renderCards();
 }
 
