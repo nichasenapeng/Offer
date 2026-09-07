@@ -330,15 +330,23 @@ input[type="number"]::-webkit-inner-spin-button { display: none; }
   backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%);
   border: 1px solid rgba(255,255,255,0.18);
   border-radius: 24px;
-  padding: 40px 36px; width: 340px;
-  display: flex; flex-direction: column; align-items: center; gap: 22px;
+  padding: 36px 34px; width: 360px; max-width: 92vw;
+  display: flex; flex-direction: column; align-items: center; gap: 18px;
   box-shadow: 0 20px 60px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.1);
 }
 .login-logo { font-family: "Kanit", sans-serif; font-size: 28px; font-weight: 600; color: #FAF8F4; letter-spacing: 0.14em; }
 .login-logo span { color: #E8B4C4; }
 .login-subtitle { font-family: "Kanit", sans-serif; font-size: 13px; font-weight: 400; color: rgba(255,255,255,0.4); letter-spacing: 0.1em; text-transform: uppercase; margin-top: -14px; }
 .login-label { font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.5); letter-spacing: 0.07em; text-transform: uppercase; align-self: flex-start; margin-bottom: -12px; }
-.user-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+.user-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; width: 100%; }
+.user-grid .user-btn:last-child:nth-child(odd) { grid-column: 1 / -1; }
+.team-block { width: 100%; }
+.team-name {
+  font-family: "Kanit", sans-serif; font-size: 12px; font-weight: 500;
+  color: #E8B4C4; letter-spacing: 0.08em; text-transform: uppercase;
+  margin-bottom: 9px; padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255,255,255,0.14);
+}
 .user-btn {
   padding: 14px 10px; border-radius: 14px;
   border: 1px solid rgba(255,255,255,0.18);
@@ -888,13 +896,27 @@ body::before, body::after { display: none !important; }
 <div class="login-overlay" id="login-overlay">
   <div class="login-box">
     <div class="login-logo">SUN<span>FOOD</span></div>
-    <div class="login-subtitle">Export Sales Team</div>
+    <div class="login-subtitle">Inquiry Form</div>
     <div class="login-label">เลือกชื่อผู้ใช้</div>
-    <div class="user-grid">
-      <button class="user-btn" data-user="NICHA">NICHA</button>
-      <button class="user-btn" data-user="NET">NET</button>
-      <button class="user-btn" data-user="KAN">KAN</button>
-      <button class="user-btn" data-user="EMMA">EMMA</button>
+    <div class="team-block">
+      <div class="team-name">Export Sales Team</div>
+      <div class="user-grid">
+        <button class="user-btn" data-user="NICHA" data-team="Export Sales Team">NICHA</button>
+        <button class="user-btn" data-user="NET" data-team="Export Sales Team">NET</button>
+        <button class="user-btn" data-user="KAN" data-team="Export Sales Team">KAN</button>
+        <button class="user-btn" data-user="EMMA" data-team="Export Sales Team">EMMA</button>
+        <button class="user-btn" data-user="MAI" data-team="Export Sales Team">MAI</button>
+      </div>
+    </div>
+    <div class="team-block">
+      <div class="team-name">Food Supply Chain</div>
+      <div class="user-grid">
+        <button class="user-btn" data-user="MAY" data-team="Food Supply Chain">MAY</button>
+        <button class="user-btn" data-user="MILK" data-team="Food Supply Chain">MILK</button>
+        <button class="user-btn" data-user="ANCHAN" data-team="Food Supply Chain">ANCHAN</button>
+        <button class="user-btn" data-user="TIK" data-team="Food Supply Chain">TIK</button>
+        <button class="user-btn" data-user="ICE" data-team="Food Supply Chain">ICE</button>
+      </div>
     </div>
     <div class="login-footer">SUNFOOD INTERNATIONAL · INQUIRY FORM</div>
   </div>
