@@ -1236,8 +1236,14 @@ function addProduct(data) {
       '<div class="field"><label>%Margin (Offer)</label>' +
         '<input class="pp-offer-margin" type="text" placeholder="เช่น 48.6%" value="' + (data.offerMargin||'') + '"></div>' +
     '</div>' +
-    '<div class="field" style="margin-bottom:10px"><label>Quantity per Month (MT)</label>' +
-      '<input class="pp-qty-month" type="text" placeholder="เช่น 96 MT / 4 FCL" value="' + (data.qtyMonth||'') + '"></div>' +
+    '<div class="g3" style="margin-bottom:10px">' +
+      '<div class="field"><label>Quantity per Month (MT)</label>' +
+        '<input class="pp-qty-month" type="text" placeholder="เช่น 96 MT / 4 FCL" value="' + (data.qtyMonth||'') + '"></div>' +
+      '<div class="field"><label>DATE (วันที่จะเสนอ)</label>' +
+        '<input class="pp-offer-date" type="text" placeholder="เช่น 10/09/2026" value="' + (data.offerDate||'') + '"></div>' +
+      '<div class="field"><label>VALID (ยืนราคาถึง)</label>' +
+        '<input class="pp-valid" type="text" placeholder="เช่น 7 วัน / ถึง 30/09/2026" value="' + (data.valid||'') + '"></div>' +
+    '</div>' +
 
     /* ── Detail ── */
     '<div class="prod-offer-divider"></div>' +
@@ -1283,7 +1289,9 @@ function getProdData() {
       period:     (b.querySelector('.pp-period')      ||{}).value||'',
       offerPrice: (b.querySelector('.pp-offer-price') ||{}).value||'',
       offerMargin:(b.querySelector('.pp-offer-margin')||{}).value||'',
-      qtyMonth:   (b.querySelector('.pp-qty-month')   ||{}).value||''
+      qtyMonth:   (b.querySelector('.pp-qty-month')   ||{}).value||'',
+      offerDate:  (b.querySelector('.pp-offer-date')  ||{}).value||'',
+      valid:      (b.querySelector('.pp-valid')       ||{}).value||''
     });
   });
   return out;
@@ -1387,7 +1395,11 @@ function submitForm() {
           lastOffer: p.lastOffer||'', currency: p.currency||'', other: p.other||'',
           period: p.period||'', offerPrice: p.offerPrice||'',
           offerMargin: p.offerMargin||'', qtyMonth: p.qtyMonth||'',
-          remark: s.remark||''
+          offerDate: p.offerDate||'', valid: p.valid||'',
+          // ฝัง DATE/VALID ไว้ต้นคอลัมน์หมายเหตุ ให้ขึ้นชีทได้เลยโดยไม่ต้องเพิ่มคอลัมน์
+          remark: ((p.offerDate || p.valid)
+            ? '[DATE: ' + (p.offerDate || '-') + ' | VALID: ' + (p.valid || '-') + '] '
+            : '') + (s.remark||'')
         };
       }));
     }, [])
@@ -1524,6 +1536,14 @@ var dataLoaded = false;
 
 function g(row, key) { return (row[key] || '').toString().trim(); }
 
+/* แกะ [DATE: .. | VALID: ..] ที่ฝังไว้ต้นหมายเหตุ ออกมาเป็นช่องแยก */
+function stripMeta_(txt) {
+  var m = (txt || '').match(/^\s*\[DATE:\s*([^|\]]*)\|\s*VALID:\s*([^\]]*)\]\s*/);
+  if (!m) return { text: txt || '', date: '', valid: '' };
+  var clean = function(v){ v = (v || '').trim(); return v === '-' ? '' : v; };
+  return { text: txt.slice(m[0].length), date: clean(m[1]), valid: clean(m[2]) };
+}
+
 function parseSheetRows(rows) {
   var out = [];
   rows.forEach(function(row) {
@@ -1618,7 +1638,9 @@ function parseSheetRows(rows) {
       offerMargin:g(row, '%Margin (Offer)'),
       totalQty:   g(row, 'Total Quantity (MT)'),
       qtyMonth:   g(row, 'Quantity per Month (MT)'),
-      remark:     g(row, 'หมายเหตุ'),
+      remark:     stripMeta_(g(row, 'หมายเหตุ')).text,
+      offerDate:  stripMeta_(g(row, 'หมายเหตุ')).date,
+      valid:      stripMeta_(g(row, 'หมายเหตุ')).valid,
       _sheetOverall:  g(row, 'สถานะรวม'),
       _sheetA1:       sheetA1,
       _sheetA2:       sheetA2,
@@ -2041,7 +2063,8 @@ function reviseOffer(ref) {
       currency:   idx === 0 ? (d.currency || '') : '',
       other:      idx === 0 ? (d.other || '') : '',
       period: d.period || '', offerPrice: d.offerPrice || '',
-      offerMargin: d.offerMargin || '', qtyMonth: d.qtyMonth || ''
+      offerMargin: d.offerMargin || '', qtyMonth: d.qtyMonth || '',
+      offerDate: d.offerDate || '', valid: d.valid || ''
     });
   });
 
@@ -2284,12 +2307,14 @@ function renderCards() {
     }
 
     var offerDetail = '';
-    if (d.period || d.offerPrice || d.offerMargin || d.qtyMonth) {
+    if (d.period || d.offerPrice || d.offerMargin || d.qtyMonth || d.offerDate || d.valid) {
       offerDetail = '<div class="offer-detail">' +
         (d.period ? '<div class="detail-cell"><div class="dl">Shipment ที่เสนอ</div><div class="dv">' + d.period + '</div></div>' : '') +
         (d.offerPrice ? '<div class="detail-cell"><div class="dl">ราคาเสนอ</div><div class="dv dv-red">$' + d.offerPrice + '/MT</div></div>' : '') +
         (d.offerMargin ? '<div class="detail-cell"><div class="dl">%Margin</div><div class="dv ' + (mgClass(d.offerMargin) === 'mg-h' ? 'dv-green' : mgClass(d.offerMargin) === 'mg-l' ? 'dv-red' : '') + '">' + d.offerMargin + '%</div></div>' : '') +
         (d.qtyMonth ? '<div class="detail-cell"><div class="dl">Qty/Month</div><div class="dv">' + d.qtyMonth + '</div></div>' : '') +
+        (d.offerDate ? '<div class="detail-cell"><div class="dl">Date ที่จะเสนอ</div><div class="dv">' + d.offerDate + '</div></div>' : '') +
+        (d.valid ? '<div class="detail-cell"><div class="dl">Valid</div><div class="dv">' + d.valid + '</div></div>' : '') +
         (d.totalQty ? '<div class="detail-cell"><div class="dl">Total Qty</div><div class="dv">' + d.totalQty + '</div></div>' : '') +
         '</div>';
     }
