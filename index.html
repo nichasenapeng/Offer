@@ -51,11 +51,11 @@ body::after { width: 200px; height: 200px; bottom: 12%; left: -50px; animation: 
   position: relative; z-index: 1;
   background: #3A2630;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 44px;
+  padding: 0 20px 0 32px; display: flex; align-items: center; gap: 16px; height: 46px;
 }
 .logo-text { font-family: "Kanit", sans-serif; font-size: 16px; font-weight: 600; color: #FAF8F4; letter-spacing: 0.12em; }
 .logo-text span { color: #E8B4C4; }
-.header-tag { font-size: 10px; color: rgba(255,255,255,0.45); letter-spacing: 0.1em; text-transform: uppercase; }
+.header-tag { flex: 1; min-width: 0; text-align: right; font-size: 10px; color: rgba(255,255,255,0.45); letter-spacing: 0.1em; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ── HERO ── */
 .hero {
@@ -358,7 +358,7 @@ input[type="number"]::-webkit-inner-spin-button { display: none; }
 }
 .login-footer { font-size: 10px; color: rgba(255,255,255,0.25); letter-spacing: 0.07em; }
 .user-tag {
-  display: none; position: fixed; top: 14px; right: 16px; z-index: 50;
+  display: none; flex-shrink: 0; white-space: nowrap;
   background: linear-gradient(135deg, rgba(239,217,224,0.95), rgba(166,61,95,0.95));
   backdrop-filter: blur(12px);
   color: white; font-family: "Kanit", sans-serif; font-size: 12px; font-weight: 600;
@@ -796,6 +796,11 @@ body::before, body::after { display: none !important; }
 .is-home{cursor:pointer;user-select:none;transition:opacity .18s}
 .is-home:hover{opacity:.72}
 .is-home:active{opacity:.55}
+/* จอแคบ: ช่องกรอกเรียงลงมาแทนบีบเป็นคอลัมน์ */
+@media (max-width: 640px) {
+  #offer-app .g2, #offer-app .g3 { grid-template-columns: 1fr; }
+  .site-header { padding: 0 14px; }
+}
 /* ── ROLE SELECT (หน้าแรก: เลือกโหมด) ── */
 .role-overlay{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#FBF7F5 0%,#F4EAED 50%,#EEE0E5 100%)}
 .role-card{background:var(--glass-strong);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--glass-border);border-radius:24px;box-shadow:var(--drop-shadow);padding:48px 44px;text-align:center;width:400px;max-width:92vw}
@@ -864,11 +869,10 @@ body::before, body::after { display: none !important; }
   </div>
 </div>
 
-<div class="user-tag" id="user-tag"></div>
-
 <header class="site-header">
   <div class="logo-text is-home" onclick="switchRole()" title="กลับหน้าหลัก">SUN<span>FOOD</span></div>
   <div class="header-tag">INQUIRY FROM CUSTOMER</div>
+  <div class="user-tag" id="user-tag"></div>
 </header>
 
 <div class="hero">
@@ -1377,7 +1381,7 @@ function selectUser(name) {
   var overlay = document.getElementById('login-overlay');
   overlay.classList.add('hidden');
   var tag = document.getElementById('user-tag');
-  tag.textContent = name; tag.style.display = 'block';
+  tag.textContent = name; tag.style.display = 'inline-flex';
   window._currentUser = name;
 }
 
