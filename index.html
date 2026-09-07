@@ -902,6 +902,15 @@ body::before, body::after { display: none !important; }
 .set-row:last-child{border-bottom:none}
 .set-row b{font-family:"Kanit",sans-serif;color:var(--ink)}
 @media(max-width:640px){.set-grid{grid-template-columns:1fr}}
+.frt-table{max-height:340px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-sm);padding:4px 12px;background:rgba(255,255,255,0.6)}
+.frt-group{font-family:"Kanit",sans-serif;font-size:11px;font-weight:600;color:var(--orange);letter-spacing:.06em;text-transform:uppercase;padding:12px 0 5px;border-bottom:1px solid var(--border);margin-bottom:4px}
+.frt-line{display:flex;align-items:center;gap:10px;padding:4px 0}
+.frt-port{flex:1;font-size:13px;color:var(--ink-soft);line-height:1.4}
+.frt-port em{font-style:normal;font-size:11px;color:var(--ink-muted)}
+.frt-val{width:96px;padding:6px 10px;text-align:right;background:#fff;border:1.5px solid var(--border);border-radius:8px;font-family:"Kanit",sans-serif;font-size:14px;font-weight:600;color:var(--ink)}
+.frt-val:focus{outline:none;border-color:var(--orange);box-shadow:0 0 0 3px rgba(166,61,95,.15)}
+.frt-unit{font-size:11px;color:var(--ink-muted);width:28px}
+.frt-src{margin-top:5px;font-size:11px;color:var(--green);line-height:1.4}
 /* ── ROLE SELECT (หน้าแรก: เลือกโหมด) ── */
 .role-overlay{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(135deg,#FBF7F5 0%,#F4EAED 50%,#EEE0E5 100%);overflow:auto}
 .role-card{background:var(--glass-strong);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--glass-border);border-radius:24px;box-shadow:var(--drop-shadow);padding:44px 40px 34px;text-align:center;width:640px;max-width:100%}
@@ -1161,6 +1170,21 @@ body::before, body::after { display: none !important; }
     </div>
 
     <div class="set-card">
+      <div class="set-title">ค่าเฟรทรายเดือน (แยกตาม Port)</div>
+      <div class="set-hint">ระบบจะดึงค่าเฟรทมาใส่ให้อัตโนมัติ เมื่อท่าเรือปลายทางในใบเสนอราคาตรงกับรายการด้านล่าง</div>
+      <div class="set-field" style="max-width:220px;margin-bottom:14px">
+        <label>เดือนของราคานี้</label>
+        <input id="frt-month" type="text" placeholder="เช่น 9/2026">
+      </div>
+      <div class="frt-table" id="frt-table"></div>
+      <div style="margin-top:14px">
+        <button class="set-btn primary" onclick="saveFreightTable()">บันทึกตารางค่าเฟรท</button>
+        <button class="set-btn" onclick="resetFreightTable()" style="margin-left:8px">คืนค่าตั้งต้น</button>
+        <span class="set-saved" id="frt-saved"></span>
+      </div>
+    </div>
+
+    <div class="set-card">
       <div class="set-title">ลิงก์ระบบ</div>
       <div class="set-links">
         <a class="set-btn" target="_blank" rel="noopener" href="https://docs.google.com/spreadsheets/d/15fxIAqk32f898h4nN-CG1HstFe3GPSy-33ALiJlJHwU/edit">เปิดชีท Offer</a>
@@ -1253,6 +1277,42 @@ function getSettings() {
   try { return JSON.parse(localStorage.getItem('sf_settings') || '{}'); } catch (e) { return {}; }
 }
 
+/* ── ตารางค่าเฟรทรายเดือน แยกตาม port ── */
+var DEFAULT_FREIGHT = {"month":"9/2026","ports":[{"g":"ญี่ปุ่น","n":"JMP","usd":"3000"},{"g":"ญี่ปุ่น","n":"MOJI, HAKATA","usd":"3300"},{"g":"ญี่ปุ่น","n":"SHIMIZU","usd":"3500"},{"g":"ญี่ปุ่น","n":"ISHIKARA","usd":"4000"},{"g":"ญี่ปุ่น","n":"TOMAKOMAI","usd":"3850"},{"g":"ญี่ปุ่น","n":"SENDAI","usd":"4000"},{"g":"ญี่ปุ่น","n":"NAHA","usd":"4300"},{"g":"ฮ่องกง","n":"HK","usd":"3000"},{"g":"เกาหลี","n":"BUSAN","usd":"3000"},{"g":"เกาหลี","n":"INCHEON","usd":"3200"},{"g":"สิงคโปร์","n":"SINGAPORE","usd":""},{"g":"สิงคโปร์","n":"SINGAPORE BY TRUCK","usd":""},{"g":"แอฟริกา","n":"DAR ES SALAAM, TANZANIA","usd":"8500"},{"g":"แอฟริกา","n":"TEMA, GHANA","usd":"8600"},{"g":"มาเลเซีย","n":"KLANG MALAYSIA","usd":"3100"},{"g":"มาเลเซีย","n":"KUCHING MALAYSIA","usd":""},{"g":"มาเลเซีย","n":"KOTA KINABALU","usd":""},{"g":"มาเลเซีย","n":"SANDAKAN","usd":""},{"g":"มาเลเซีย","n":"TANJUNG PELEPAS, MALAYSIA","usd":""},{"g":"มาเลเซีย","n":"MALAYSIA BY TRUCK","usd":"4500"},{"g":"มาเลเซีย","n":"MALAYSIA EX-WORKS WITH DOCUMENTS","usd":"1000","note":"30,000 บาท"},{"g":"ฟิลิปปินส์","n":"MANILA, PHILLIPPINES","usd":""},{"g":"ยุโรป / UK","n":"EU ROTTERDAM","usd":"8000","note":"-800"},{"g":"ยุโรป / UK","n":"UK SOUTHAMTON","usd":""},{"g":"ยุโรป / UK","n":"UK FELIXSTOWE","usd":""},{"g":"ยุโรป / UK","n":"FRANCE LE HAVRE","usd":""},{"g":"ยุโรป / UK","n":"DURRES, ALBANIA","usd":"10000","note":"-2600"},{"g":"ยุโรป / UK","n":"EU COPENHAGEN","usd":""},{"g":"ตะวันออกกลาง","n":"KHOR FAKKAN, UAE","usd":"15200"},{"g":"ตะวันออกกลาง","n":"JEBEL ALI UAE","usd":"15200"},{"g":"ตะวันออกกลาง","n":"SHARJAH UAE","usd":""},{"g":"ตะวันออกกลาง","n":"ABU DHABI UAE","usd":""},{"g":"ตะวันออกกลาง","n":"AJMAN UAE","usd":""},{"g":"ตะวันออกกลาง","n":"SAUDI DAMMAN","usd":""},{"g":"ตะวันออกกลาง","n":"SAUDI RIYADH","usd":""},{"g":"ตะวันออกกลาง","n":"SAUDI JEDDAH","usd":""},{"g":"ตะวันออกกลาง","n":"HAMAD, QATAR","usd":""},{"g":"ตะวันออกกลาง","n":"SHUWAIKH, KUWAIT","usd":""},{"g":"ตะวันออกกลาง","n":"MINA SALMAN, BAHRAIN","usd":""},{"g":"มัลดีฟส์","n":"MALE, MALDIVE","usd":"7100"},{"g":"แอฟริกาใต้","n":"DURBAN, SOUTH AFRICA","usd":"5300"},{"g":"แอฟริกาใต้","n":"CAPE TOWN, SOUTH AFRICA","usd":""},{"g":"จีน","n":"CHINA NANSHA, SHEKOU, SHANGHAI, QINGDAO","usd":""},{"g":"จีน","n":"CHINA YANTIAN","usd":""},{"g":"จีน","n":"CHINA TIANJIN","usd":""},{"g":"จีน","n":"CHINA XIAMEN","usd":""},{"g":"จีน","n":"CHINA SHANTOU","usd":""}]};
+function getFreightTable() {
+  try {
+    var saved = JSON.parse(localStorage.getItem('sf_freight') || 'null');
+    if (saved && saved.ports && saved.ports.length) return saved;
+  } catch (e) {}
+  return JSON.parse(JSON.stringify(DEFAULT_FREIGHT));
+}
+/* หา port ที่ตรงกับท่าเรือปลายทางที่พิมพ์ — ชื่อยาวกว่าชนะ กันจับผิดตัว */
+function lookupFreight(portText) {
+  var t = (portText || '').toUpperCase();
+  if (!t) return null;
+  var tbl = getFreightTable(), best = null;
+  // คำกว้างเกินไป ใช้เป็นชื่อเมืองไม่ได้ (จะไปจับผิดท่า)
+  var GENERIC = ['MALAYSIA','CHINA','SAUDI','SOUTH','AFRICA','TRUCK','WORKS','DOCUMENTS','WITH','FROM'];
+  tbl.ports.forEach(function(p) {
+    if (!p.usd) return;
+    var full = p.n.toUpperCase();
+    var aliases = full.split(/[,\/]/);
+    // เติมชื่อเมืองรายคำ เผื่อพิมพ์แค่ชื่อเมือง เช่น "Rotterdam"
+    full.split(/[\s,\/]+/).forEach(function(w) {
+      if (w.length >= 4 && GENERIC.indexOf(w) === -1) aliases.push(w);
+    });
+    aliases.forEach(function(a) {
+      a = a.trim();
+      if (a.length < 2) return;
+      var re = new RegExp('\\b' + a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b');
+      if (re.test(t) && (!best || a.length > best.alias.length)) {
+        best = { alias: a, port: p.n, usd: p.usd, note: p.note || '', month: tbl.month };
+      }
+    });
+  });
+  return best;
+}
+
 /* ── TAB NAVIGATION ── */
 function showTab(n) {
   for (var i = 1; i <= 3; i++) {
@@ -1276,8 +1336,24 @@ function showTab(n) {
   window.scrollTo(0, 0);
 }
 
+/* เติมค่าเฟรทจากตาราง ให้รายการที่ยังไม่ได้กรอก */
+function applyFreightFromPort() {
+  var portEl = document.getElementById('c-port');
+  var hit = lookupFreight(portEl ? portEl.value : '');
+  document.querySelectorAll('#offer-app .prod-block').forEach(function(b) {
+    var f = b.querySelector('.pp-freight');
+    var tag = b.querySelector('.frt-src');
+    if (f && hit && !f.value) { f.value = hit.usd; calcFreight(f); }
+    if (tag) {
+      tag.textContent = hit ? 'จากตารางค่าเฟรท ' + hit.month + ' · ' + hit.port + (hit.note ? ' (' + hit.note + ')' : '') : '';
+      tag.style.display = hit ? 'block' : 'none';
+    }
+  });
+}
+
 function goNext(from) {
   if (from === 1) {
+    setTimeout(applyFreightFromPort, 0);
     if (!document.getElementById('c-company').value.trim() || !document.getElementById('c-port').value.trim()) {
       alert('กรุณากรอก Company Name และ Destination Port ก่อนค่ะ');
       return;
@@ -1316,6 +1392,11 @@ function addProduct(data) {
   var cfg = getSettings();   // เติมค่าเริ่มต้นจากหน้าตั้งค่า
   if (!data.fx && cfg.fx) data.fx = cfg.fx;
   if (!data.mtPerCont && cfg.mtPerCont) data.mtPerCont = cfg.mtPerCont;
+  if (!data.freight) {
+    var portEl = document.getElementById('c-port');
+    var hit = lookupFreight(portEl ? portEl.value : '');
+    if (hit) data.freight = hit.usd;
+  }
   var div = document.createElement('div');
   div.className = 'prod-block';
   div.id = 'pb-' + id;
@@ -1368,7 +1449,8 @@ function addProduct(data) {
 
     '<div class="g3" style="margin-bottom:10px">' +
       '<div class="field"><label>ค่าเฟรท (USD ต่อตู้)</label>' +
-        '<input class="pp-freight" type="text" inputmode="decimal" placeholder="เช่น 3000" value="' + (data.freight||'') + '" oninput="calcFreight(this)"></div>' +
+        '<input class="pp-freight" type="text" inputmode="decimal" placeholder="เช่น 3000" value="' + (data.freight||'') + '" oninput="calcFreight(this)">' +
+        '<div class="frt-src" style="display:none"></div></div>' +
       '<div class="field"><label>ปริมาณต่อตู้ (MT)</label>' +
         '<input class="pp-mtcont" type="text" inputmode="decimal" placeholder="เช่น 24" value="' + (data.mtPerCont||'') + '" oninput="calcFreight(this)"></div>' +
       '<div class="field"><label>ค่าเงิน (THB ต่อ USD)</label>' +
@@ -2944,12 +3026,44 @@ function saveSettings() {
   el.textContent = 'บันทึกแล้ว';
   setTimeout(function(){ el.textContent = ''; }, 2500);
 }
+function renderFreightTable() {
+  var tbl = getFreightTable();
+  document.getElementById('frt-month').value = tbl.month || '';
+  var html = '', lastG = null;
+  tbl.ports.forEach(function(p, i) {
+    if (p.g !== lastG) { html += '<div class="frt-group">' + p.g + '</div>'; lastG = p.g; }
+    html += '<div class="frt-line">' +
+      '<span class="frt-port">' + p.n + (p.note ? ' <em>(' + p.note + ')</em>' : '') + '</span>' +
+      '<input class="frt-val" data-i="' + i + '" type="text" inputmode="decimal" placeholder="—" value="' + (p.usd || '') + '">' +
+      '<span class="frt-unit">USD</span>' +
+    '</div>';
+  });
+  document.getElementById('frt-table').innerHTML = html;
+}
+function saveFreightTable() {
+  var tbl = getFreightTable();
+  tbl.month = (document.getElementById('frt-month').value || '').trim();
+  document.querySelectorAll('#frt-table .frt-val').forEach(function(el) {
+    tbl.ports[+el.dataset.i].usd = (el.value || '').trim();
+  });
+  try { localStorage.setItem('sf_freight', JSON.stringify(tbl)); } catch (e) {}
+  var el = document.getElementById('frt-saved');
+  el.textContent = 'บันทึกแล้ว';
+  setTimeout(function(){ el.textContent = ''; }, 2500);
+}
+function resetFreightTable() {
+  if (!confirm('คืนค่าเฟรททั้งตารางกลับเป็นชุดตั้งต้น?')) return;
+  try { localStorage.removeItem('sf_freight'); } catch (e) {}
+  renderFreightTable();
+}
+
 function clearLocalCopies() {
   if (!confirm('ล้างสำเนาใบเสนอราคาที่เก็บไว้ในเบราว์เซอร์นี้?\nข้อมูลในชีทไม่ถูกแตะต้อง')) return;
   try { localStorage.removeItem('sf_requests'); } catch (e) {}
   renderSettings();
 }
 function renderSettings() {
+  renderFreightTable();
   var cfg = getSettings();
   document.getElementById('set-fx').value = cfg.fx || '';
   document.getElementById('set-mtcont').value = cfg.mtPerCont || '';
