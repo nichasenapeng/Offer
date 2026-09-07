@@ -786,6 +786,11 @@ input[type="number"]::-webkit-inner-spin-button { display: none; }
 #approve-app .filter-btn.active{box-shadow:0 3px 12px rgba(236,72,153,.35)}
 
 #offer-app .header-tag{margin-left:16px}
+.badge-lost{background:rgba(243,244,246,0.9);color:#6b7280;border:1px solid #d1d5db}
+.stripe-closed-won{background:linear-gradient(90deg,var(--green),#10b981)}
+.stripe-closed-lost{background:linear-gradient(90deg,#9ca3af,#6b7280)}
+#approve-app .offer-card.status-closed-won{border-left:5px solid var(--green)}
+#approve-app .offer-card.status-closed-lost{border-left:5px solid #9ca3af}
 /* ── ROLE SELECT (หน้าแรก: เลือกโหมด) ── */
 .role-overlay{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#FFE4F1 0%,#FFC8E1 50%,#FFA8CE 100%)}
 .role-card{background:var(--glass-strong);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--glass-border);border-radius:24px;box-shadow:var(--drop-shadow);padding:48px 44px;text-align:center;width:400px;max-width:92vw}
@@ -1039,6 +1044,8 @@ input[type="number"]::-webkit-inner-spin-button { display: none; }
   <button class="filter-btn" id="filter-partial"  onclick="setFilter('partial',this)">Approve 1 แล้ว</button>
   <button class="filter-btn" id="filter-approved" onclick="setFilter('approved',this)">อนุมัติครบ</button>
   <button class="filter-btn" id="filter-rejected" onclick="setFilter('rejected',this)">ปฏิเสธ</button>
+  <button class="filter-btn" id="filter-closed-won" onclick="setFilter('closed-won',this)">ปิดการขายได้</button>
+  <button class="filter-btn" id="filter-closed-lost" onclick="setFilter('closed-lost',this)">ไม่ปิดการขาย</button>
 </div>
 
 <div class="section-heading">
@@ -1540,6 +1547,7 @@ function parseSheetRows(rows) {
       totalQty:   g(row, 'Total Quantity (MT)'),
       qtyMonth:   g(row, 'Quantity per Month (MT)'),
       remark:     g(row, 'หมายเหตุ'),
+      _sheetOverall:  g(row, 'สถานะรวม'),
       _sheetA1:       sheetA1,
       _sheetA2:       sheetA2,
       _sheetRemarkA1: g(row, 'หมายเหตุ A1'),
@@ -1571,6 +1579,8 @@ function loadData() {
           approvals[d.ref].remarkA1 = d._sheetRemarkA1;
         if (!approvals[d.ref].remarkA2 && d._sheetRemarkA2)
           approvals[d.ref].remarkA2 = d._sheetRemarkA2;
+        if (!approvals[d.ref].close && (d._sheetOverall === 'closed-won' || d._sheetOverall === 'closed-lost'))
+          approvals[d.ref].close = d._sheetOverall;
       });
 
       document.getElementById('last-updated').textContent = 'อัปเดต: ' + new Date().toLocaleTimeString('th-TH');
@@ -1804,6 +1814,7 @@ function setFilter(f, btn) {
 // ── STATUS ──
 function getStatus(ref) {
   var a = approvals[ref] || {}; var v1 = a.A1; var v2 = a.A2;
+  if (a.close) return a.close;
   if (!v1 && !v2) return 'pending';
   if (v1 === 'rejected' || v2 === 'rejected') return 'rejected';
   if (v1 === 'approved' && v2 === 'approved') return 'approved';
@@ -1812,7 +1823,7 @@ function getStatus(ref) {
 }
 
 function badge(status) {
-  var m = { pending:['badge-pending','รออนุมัติ'], approved:['badge-approved','อนุมัติครบ'], rejected:['badge-rejected','ปฏิเสธ'], partial:['badge-partial','Approve 1 แล้ว'] };
+  var m = { pending:['badge-pending','รออนุมัติ'], approved:['badge-approved','อนุมัติครบ — รอปิดการขาย'], rejected:['badge-rejected','ปฏิเสธ'], partial:['badge-partial','Approve 1 แล้ว'], 'closed-won':['badge-approved','ปิดการขายได้'], 'closed-lost':['badge-lost','ไม่ปิดการขาย'] };
   var s = m[status] || m.pending;
   return '<span class="status-badge ' + s[0] + '">' + s[1] + '</span>';
 }
@@ -1823,6 +1834,34 @@ function mgClass(m) {
   if (n >= 35) return 'mg-h';
   if (n >= 20) return 'mg-m';
   return 'mg-l';
+}
+
+// ── CLOSE SALE (โหมด Status) ──
+function postSaleState(ref, statusVal) {
+  var d = DATA.filter(function(x){ return x.ref === ref; })[0] || {};
+  var av = approvals[ref] || {};
+  var payload = {
+    ref: ref, company: d.company || '', port: d.port || '',
+    products: (d.products || []).map(function(p){ return { type: p.type || '' }; }),
+    offerPrice: d.offerPrice || '', offerMargin: d.offerMargin || '',
+    qtyMonth: d.qtyMonth || '', period: d.period || '',
+    A1: av.A1 || '', A2: av.A2 || '', status: statusVal,
+    remarkA1: av.remarkA1 || '', remarkA2: av.remarkA2 || ''
+  };
+  fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) }).catch(function(){});
+}
+function closeSale(ref, result) {
+  if (!approvals[ref]) approvals[ref] = {};
+  approvals[ref].close = result;
+  postSaleState(ref, result);
+  showToast(result === 'closed-won' ? 'บันทึกแล้ว: ปิดการขายได้' : 'บันทึกแล้ว: ไม่ปิดการขาย', result === 'closed-won' ? 'green' : 'red');
+  renderCards();
+}
+function undoClose(ref) {
+  if (approvals[ref]) delete approvals[ref].close;
+  postSaleState(ref, 'approved');
+  showToast('ยกเลิกผลการขายแล้ว — กลับเป็นรอปิดการขาย');
+  renderCards();
 }
 
 // ── VOTE ──
@@ -1975,6 +2014,21 @@ function renderCards() {
         '</div>' +
       '</div>';
     }
+    if (window._statusMode && (status === 'approved' || status === 'closed-won' || status === 'closed-lost')) {
+      var closeInner;
+      if (status === 'approved') {
+        closeInner = '<div class="vote-buttons">' +
+          '<button class="vote-btn btn-approve" onclick="closeSale(\'' + d.ref + '\',\'closed-won\')">ปิดการขายได้</button>' +
+          '<button class="vote-btn btn-reject" onclick="closeSale(\'' + d.ref + '\',\'closed-lost\')">ไม่ปิดการขาย</button>' +
+        '</div>';
+      } else {
+        closeInner = '<div class="vote-result ' + (status === 'closed-won' ? 'approved' : 'rejected') + '">' +
+          (status === 'closed-won' ? 'ปิดการขายได้' : 'ไม่ปิดการขาย') +
+          '<button class="btn-undo" onclick="undoClose(\'' + d.ref + '\')">แก้ไข</button></div>';
+      }
+      approveHtml = '<div class="approve-section"><div class="vote-slot-wrap" style="padding-left:0">' +
+        '<div class="slot-label">ผลการขาย (หลังอนุมัติ)</div>' + closeInner + '</div></div>';
+    }
 
     var stripeClass = 'stripe-' + status;
 
@@ -2029,6 +2083,9 @@ function enterRole(role) {
   document.getElementById('approve-app').style.display = useApproveApp ? 'block' : 'none';
   document.getElementById('offer-app').style.display = useApproveApp ? 'none' : 'block';
   if (window._statusMode) {
+    curFilter = 'approved';
+    document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
+    var fb = document.getElementById('filter-approved'); if (fb) fb.classList.add('active');
     document.getElementById('ap-login-overlay').style.display = 'none';
     document.getElementById('hdr-user').textContent = 'ดูสถานะ (อ่านอย่างเดียว)';
     var lo = document.querySelector('#approve-app .btn-logout');
