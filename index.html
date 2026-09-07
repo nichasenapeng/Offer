@@ -856,6 +856,17 @@ body::before, body::after { display: none !important; }
 #approve-app .ext-compare b{font-family:"Kanit",sans-serif;color:var(--red-dark)}
 #approve-app .filter-btn.has-pending{background:#FEF3C7;border-color:#d99a2b;color:#8a5a08;font-weight:600}
 #approve-app .filter-btn.has-pending.active{background:#d99a2b;border-color:#d99a2b;color:#fff}
+#approve-app .filter-btn{position:relative;overflow:visible}
+#approve-app .filter-badge{
+  position:absolute;top:-8px;right:-7px;min-width:20px;height:20px;padding:0 6px;
+  display:inline-flex;align-items:center;justify-content:center;
+  border-radius:10px;background:#9CA3AF;color:#fff;
+  font-family:"Kanit",sans-serif;font-size:11px;font-weight:600;line-height:1;
+  box-shadow:0 2px 6px rgba(0,0,0,.18);border:2px solid #FBF7F5;
+}
+#approve-app .filter-badge.urgent{background:#C0152A;box-shadow:0 2px 8px rgba(192,21,42,.4)}
+#approve-app .filter-btn.active .filter-badge{border-color:var(--red)}
+#approve-app .filter-btn.active .filter-badge.urgent{background:#fff;color:var(--red-dark)}
 #approve-app .notif-pill{display:inline-flex;align-items:center;gap:7px;background:#FEF3C7;border:1px solid #f0c76b;color:#8a5a08;border-radius:24px;padding:5px 14px;font-family:"Kanit",sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;box-shadow:0 2px 10px rgba(0,0,0,.12)}
 #approve-app .notif-pill:hover{background:#fde9a9;transform:translateY(-1px)}
 #approve-app .notif-pill b{font-size:14px;font-weight:700}
@@ -2687,20 +2698,24 @@ function updateFilterCounts_(data) {
   // สถานะที่ยังต้องมีคนลงมือ — เน้นสีให้เห็น
   var needsAction = window._statusMode ? {'approved':1} : {'pending':1, 'partial':1};
 
+  var paint = function(b, n, urgent) {
+    if (!b) return;
+    if (!b.dataset.base) b.dataset.base = (b.textContent || '').replace(/\s*\(\d+\)\s*$/, '').trim();
+    b.innerHTML = b.dataset.base +
+      (n ? '<span class="filter-badge' + (urgent ? ' urgent' : '') + '">' + n + '</span>' : '');
+    b.classList.toggle('has-pending', !!urgent && n > 0);
+  };
+
   Object.keys(map).forEach(function(id) {
-    var b = document.getElementById(id); if (!b) return;
-    if (!b.dataset.base) b.dataset.base = b.textContent.replace(/\s*\(\d+\)\s*$/, '').trim();
     var n = count(map[id]);
-    b.textContent = b.dataset.base + (n ? ' (' + n + ')' : '');
-    b.classList.toggle('has-pending', !!needsAction[map[id]] && n > 0);
+    paint(document.getElementById(id), n, !!needsAction[map[id]]);
   });
 
   var extN = extPendingCount_(data);
   var extBtn = document.getElementById('filter-ext');
   if (extBtn) {
     if (!extBtn.dataset.base) extBtn.dataset.base = 'ขอขยาย VALID';
-    extBtn.textContent = extBtn.dataset.base + (extN ? ' (' + extN + ')' : '');
-    extBtn.classList.toggle('has-pending', extN > 0);
+    paint(extBtn, extN, true);
   }
 
   // ป้ายแจ้งเตือนรวมบน header
