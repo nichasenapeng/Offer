@@ -781,6 +781,9 @@ body::before, body::after { display: none !important; }
 #approve-app .close-summary{display:flex;align-items:flex-end;gap:26px;flex-wrap:wrap;background:rgba(230,247,240,0.6);border:1px solid #a7f3d0;border-radius:var(--radius-sm);padding:12px 18px}
 #approve-app .close-cell .dl{font-size:10px}
 #approve-app .close-cell .dv{font-size:15px;color:var(--green)}
+#approve-app .close-remark-wrap{margin-top:12px}
+#approve-app .close-remark{width:100%;font-weight:400;font-size:13px;font-family:"Sarabun",sans-serif;resize:vertical;line-height:1.5}
+#approve-app .close-remark-note{margin-top:10px;font-size:13px;color:var(--ink-soft);background:rgba(255,255,255,0.55);border-left:3px solid var(--border-strong);border-radius:0 6px 6px 0;padding:8px 12px}
 @media(max-width:768px){#approve-app .close-grid{grid-template-columns:1fr 1fr}}
 /* skeleton loader */
 @keyframes skShimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}
@@ -1605,7 +1608,7 @@ function demoApprovals() {
     'SFD-2026-0103': { A1:'approved', remarkA1:'ราคาโอเค แต่รอเช็คสต็อก skin' },
     'SFD-2026-0104': { A1:'approved', A2:'approved', remarkA1:'อนุมัติ', remarkA2:'ลูกค้าใหม่ ให้ลองดู' },
     'SFD-2026-0105': { A1:'approved', A2:'approved' },
-    'SFD-2026-0106': { A1:'approved', A2:'approved', close:'closed-won', closeShipment:'Nov/Dec 2026', closeQty:'48 MT / 2 FCL', closePrice:'3,300', closeMargin:'41.2%' },
+    'SFD-2026-0106': { A1:'approved', A2:'approved', close:'closed-won', closeShipment:'Nov/Dec 2026', closeQty:'48 MT / 2 FCL', closePrice:'3,300', closeMargin:'41.2%', closeRemark:'ลูกค้าตกลงตามราคาเสนอ ขอเลื่อน shipment เป็นต้นเดือน' },
     'SFD-2026-0107': { A1:'approved', A2:'approved', close:'closed-won', closeShipment:'Jan 2027', closeQty:'24 MT / 1 FCL', closePrice:'3,900', closeMargin:'47.5%' },
     'SFD-2026-0108': { A1:'approved', A2:'approved', close:'closed-lost' },
     'SFD-2026-0109': { A1:'rejected', remarkA1:'margin ต่ำกว่าเกณฑ์ ขอปรับราคาใหม่' },
@@ -1666,6 +1669,7 @@ function loadData() {
             approvals[d.ref].close = ov[0];
             if (ov.length >= 5) {
               CLOSE_FIELDS.forEach(function(f, i){ if (ov[i+1]) approvals[d.ref][f.key] = ov[i+1]; });
+              if (ov[5]) approvals[d.ref].closeRemark = ov.slice(5).join('|');
             } else if (ov[1]) {
               approvals[d.ref].closePrice = ov[1];  // ข้อมูลเก่าที่เก็บแค่ราคา
             }
@@ -1953,8 +1957,11 @@ var CLOSE_FIELDS = [
 
 function closeSale(ref, result) {
   if (!approvals[ref]) approvals[ref] = {};
-  var vals = [];
+  var remEl = document.getElementById('close-remark-' + ref);
+  var remark = remEl ? remEl.value.trim().replace(/\|/g, ' ') : '';
+  var vals = null;
   if (result === 'closed-won') {
+    vals = [];
     for (var i = 0; i < CLOSE_FIELDS.length; i++) {
       var f = CLOSE_FIELDS[i];
       var el = document.getElementById(f.id + '-' + ref);
@@ -1963,11 +1970,14 @@ function closeSale(ref, result) {
       vals.push(v);
       approvals[ref][f.key] = v;
     }
+    vals.push(remark);
   } else {
     CLOSE_FIELDS.forEach(function(f){ delete approvals[ref][f.key]; });
+    if (remark) vals = ['', '', '', '', remark];
   }
   approvals[ref].close = result;
-  postSaleState(ref, vals.length ? result + '|' + vals.join('|') : result);
+  approvals[ref].closeRemark = remark;
+  postSaleState(ref, vals ? result + '|' + vals.join('|') : result);
   showToast(result === 'closed-won'
     ? 'บันทึกแล้ว: ปิดการขายได้ ' + approvals[ref].closePrice + ' USD/MT'
     : 'บันทึกแล้ว: ไม่ปิดการขาย', result === 'closed-won' ? 'green' : 'red');
@@ -1976,6 +1986,7 @@ function closeSale(ref, result) {
 function undoClose(ref) {
   if (approvals[ref]) {
     delete approvals[ref].close;
+    delete approvals[ref].closeRemark;
     CLOSE_FIELDS.forEach(function(f){ delete approvals[ref][f.key]; });
   }
   postSaleState(ref, 'approved');
@@ -2156,6 +2167,8 @@ function renderCards() {
             (d[f.from] ? 'เสนอไว้ ' + d[f.from] : '—') + '" value="' + (av[f.key] || '') + '"></div>';
         }).join('');
         closeInner = '<div class="close-grid">' + inputs + '</div>' +
+          '<div class="close-field close-remark-wrap"><label>Remark (ถ้ามี)</label>' +
+          '<textarea id="close-remark-' + d.ref + '" class="close-input close-remark" rows="2" placeholder="เช่น ลูกค้าขอเลื่อน shipment, ต่อรองราคาลง, คู่แข่งเสนอต่ำกว่า">' + (av.closeRemark || '') + '</textarea></div>' +
           '<div class="vote-buttons" style="margin-top:12px">' +
             '<button class="vote-btn btn-approve" onclick="closeSale(\'' + d.ref + '\',\'closed-won\')">ปิดการขายได้</button>' +
             '<button class="vote-btn btn-reject" onclick="closeSale(\'' + d.ref + '\',\'closed-lost\')">ไม่ปิดการขาย</button>' +
@@ -2165,10 +2178,12 @@ function renderCards() {
           return '<div class="close-cell"><div class="dl">' + f.label + '</div><div class="dv">' + (av[f.key] || '—') + '</div></div>';
         }).join('');
         closeInner = '<div class="close-summary">' + cells +
-          '<button class="btn-undo" onclick="undoClose(\'' + d.ref + '\')">แก้ไข</button></div>';
+          '<button class="btn-undo" onclick="undoClose(\'' + d.ref + '\')">แก้ไข</button></div>' +
+          (av.closeRemark ? '<div class="close-remark-note"><b>Remark:</b> ' + av.closeRemark + '</div>' : '');
       } else {
         closeInner = '<div class="vote-result rejected">ไม่ปิดการขาย' +
-          '<button class="btn-undo" onclick="undoClose(\'' + d.ref + '\')">แก้ไข</button></div>';
+          '<button class="btn-undo" onclick="undoClose(\'' + d.ref + '\')">แก้ไข</button></div>' +
+          (av.closeRemark ? '<div class="close-remark-note"><b>Remark:</b> ' + av.closeRemark + '</div>' : '');
       }
       approveHtml = '<div class="approve-section"><div class="vote-slot-wrap" style="padding-left:0">' +
         '<div class="slot-label">ผลการขาย (หลังอนุมัติ)</div>' + closeInner + '</div></div>';
