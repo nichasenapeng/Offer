@@ -566,17 +566,7 @@ body::before, body::after { display: none !important; }
   transition:box-shadow .2s,transform .2s;
 }
 .offer-card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
-.offer-card.status-approved{border-left:5px solid var(--green)}
-.offer-card.status-rejected{border-left:5px solid var(--red)}
-.offer-card.status-pending {border-left:5px solid var(--yellow)}
-.offer-card.status-partial {border-left:5px solid #2563eb}
 
-/* card top stripe */
-.card-stripe{height:3px}
-.stripe-pending {background:linear-gradient(90deg,var(--yellow),#f59e0b)}
-.stripe-approved{background:linear-gradient(90deg,var(--green),#10b981)}
-.stripe-rejected{background:linear-gradient(90deg,var(--red-dark),var(--red))}
-.stripe-partial {background:linear-gradient(90deg,#3B5A8C,#5B7DB1)}
 
 .card-header{
   display:flex;align-items:flex-start;justify-content:space-between;
@@ -783,10 +773,6 @@ body::before, body::after { display: none !important; }
 
 #offer-app .header-tag{margin-left:16px}
 .badge-lost{background:rgba(243,244,246,0.9);color:#6b7280;border:1px solid #d1d5db}
-.stripe-closed-won{background:linear-gradient(90deg,var(--green),#10b981)}
-.stripe-closed-lost{background:linear-gradient(90deg,#9ca3af,#6b7280)}
-#approve-app .offer-card.status-closed-won{border-left:5px solid var(--green)}
-#approve-app .offer-card.status-closed-lost{border-left:5px solid #9ca3af}
 #approve-app .close-row{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
 #approve-app .close-price-wrap label{display:block;font-size:10px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
 #approve-app .close-price-input{width:190px;padding:9px 14px;background:rgba(255,255,255,0.9);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:"Kanit",sans-serif;font-size:15px;font-weight:600;color:var(--ink);transition:border-color .2s,box-shadow .2s}
@@ -2147,10 +2133,7 @@ function renderCards() {
         '<div class="slot-label">ผลการขาย (หลังอนุมัติ)</div>' + closeInner + '</div></div>';
     }
 
-    var stripeClass = 'stripe-' + status;
-
     html += '<div class="offer-card status-' + status + '">' +
-      '<div class="card-stripe ' + stripeClass + '"></div>' +
       '<div class="card-header">' +
         '<div>' +
           '<div class="card-ref">' + d.ref + (d.isTest ? '<span class="test-badge">TEST</span>' : '') + '</div>' +
